@@ -1,0 +1,14 @@
+{
+  "version": "0.2.0",
+  "configurations": [           
+    
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Server - Debug",
+      "program": "${workspaceFolder}/dist/node-test/server.js",
+      "preLaunchTask": "Server - Bundle",
+      "cwd": "${workspaceFolder}"
+    }    
+  ]
+}

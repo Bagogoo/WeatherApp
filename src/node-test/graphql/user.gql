@@ -1,0 +1,20 @@
+type RegisteredUser{
+  ukey: ID,
+  confirm_token: ID
+}
+type AccessToken{
+  ukey: ID,
+  access_token: ID
+}
+type Profile{
+  ukey: ID,
+  email:String
+}
+type Query{
+  profile(ukey: String!): Profile
+}
+type Mutation{
+  register(email: String!, password: String!, confirmation: String!):RegisteredUser
+  login(email: String!, password: String!) : AccessToken
+  confirm(email: String!): Boolean
+}
