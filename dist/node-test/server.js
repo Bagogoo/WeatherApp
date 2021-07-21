@@ -14,6 +14,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const express_graphql_1 = require("express-graphql");
+const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const routes_1 = require("./routes");
 const app = express_1.default();
 app.use(function (req, res, next) {
@@ -25,9 +26,15 @@ app.use(function (req, res, next) {
 });
 app.use(express_1.default.json());
 app.use(cors_1.default());
-app.use('/user', express_graphql_1.graphqlHTTP({
+app.use(cookie_parser_1.default());
+app
+    .use('/user', express_graphql_1.graphqlHTTP({
     rootValue: routes_1.users.rootValue,
     schema: routes_1.users.schema,
+    graphiql: true
+})).use('/forecast', express_graphql_1.graphqlHTTP({
+    rootValue: routes_1.forecast.rootValue,
+    schema: routes_1.forecast.schema,
     graphiql: true
 }));
 app.listen(3000);
@@ -41,9 +48,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.users = void 0;
+exports.forecast = exports.users = void 0;
 var user_1 = require("./user");
 Object.defineProperty(exports, "users", { enumerable: true, get: function () { return __importDefault(user_1).default; } });
+var forecast_1 = require("./forecast");
+Object.defineProperty(exports, "forecast", { enumerable: true, get: function () { return __importDefault(forecast_1).default; } });
 
 });
 ___scope___.file("node-test/routes/user.js", function(exports, require, module, __filename, __dirname){
@@ -66,19 +75,11 @@ exports.default = {
         },
         async register({ email, password, confirmation, }) {
             if (password !== confirmation) {
-                const result = {
-                    data: Error("Podane hasła nie zgadzają się"),
-                    status: 400,
-                };
-                return result.data;
+                throw new Error("Hasła nie zgadzają się");
             }
             const u = await this.getUserByEmail({ email });
             if (u != undefined) {
-                const result = {
-                    data: Error("Użytkownik o podanym mailu istnieje"),
-                    status: 400,
-                };
-                return result.data;
+                throw new Error("Użytkownik o podanym mailu istnieje");
             }
             const hpass = await bcryptjs_1.hash(password, 12);
             const user = {
@@ -87,62 +88,56 @@ exports.default = {
                 ukey: uuid_1.v4()
             };
             const [row] = await this.query('INSERT INTO users (ukey, email, password) VALUES ($1, $2, $3) RETURNING  ukey, email, password', [user.ukey, user.email, user.password]);
-            return row;
+            const result = {
+                data: {
+                    ukey: row.ukey,
+                    confirm_token: 'ConfirmToken'
+                }, status: 200
+            };
+            return result.data;
         },
         async confirm({ email }, context) {
-            const u = await this.getUserByEmail({ email });
-            if (u === undefined) {
-                const result = {
-                    data: Error("Użytkownik nie istnieje"),
-                    status: 400,
-                };
-                return result.data;
+            const user = await this.getUserByEmail({ email });
+            if (user === undefined) {
+                throw new Error("Użytkownik nie istnieje");
             }
-            if (u.confirmed === true) {
-                const result = {
-                    data: Error("Użytkownik potwierdzony"),
-                    status: 400,
-                };
-                return result.data;
+            if (user.confirmed === true) {
+                throw Error("Użytkownik już potwierdzony");
             }
             const success = await this.query("UPDATE Users SET confirm=true where email = $1", [email]);
             if (!success) {
-                const result = {
-                    data: Error("Wystąpił błąd"),
-                    status: 500,
-                };
-                return result.data;
+                throw Error("Wystąpił błąd");
             }
             return true;
         },
-        async login({ email, password }) {
-            const u = await this.getUserByEmail({ email });
-            if (u === undefined) {
-                const result = {
-                    data: Error("Użytkownik nie istnieje"),
-                    status: 400,
-                };
-                return result.data;
+        async login({ email, password }, context) {
+            const user = await this.getUserByEmail({ email });
+            if (user === undefined) {
+                context.res.status(400);
+                throw new Error("Użytkownik nie istnieje");
             }
-            if (u.confirmed == false) {
-                const result = {
-                    data: Error("Użytkownik nie potwierdzony"),
-                    status: 401,
-                };
-                return result.data;
+            if (user.confirmed == false) {
+                context.res.status(400);
+                throw new Error("Użytkownik niepotwierdzony");
             }
-            const valid = await bcryptjs_1.compare(password, u.password);
+            const valid = await bcryptjs_1.compare(password, user.password);
             if (valid) {
-                const accessToken = `accesss-token-${u.ukey}`;
+                const accessToken = `accesss-token-${user.ukey}`;
                 const result = {
-                    data: { ukey: u.ukey, access_token: accessToken },
+                    data: { ukey: user.ukey, access_token: accessToken },
                     status: 200
                 };
+                context.res.status(200);
                 return result.data;
             }
         },
-        async profile({ ukey }, context) {
-            return { ukey: "ukey", email: "email" };
+        async profile(ukey, context) {
+            const user = await this.getUserByKey(ukey);
+            if (user === undefined) {
+                context.res.status(404);
+                throw new Error('Użytkownik nieprawidłowy');
+            }
+            return user;
         },
         async query(command, values) {
             const result = await db_1.pool.query(command, values);
@@ -171,7 +166,35 @@ exports.pool = new pg_1.Pool({
 });
 ___scope___.file("node-test/graphql/user.gql", function(exports, require, module, __filename, __dirname){
 
-module.exports = "type RegisteredUser{\r\n  ukey: ID,\r\n  confirm_token: ID\r\n}\r\ntype AccessToken{\r\n  ukey: ID,\r\n  access_token: ID\r\n}\r\ntype Profile{\r\n  ukey: ID,\r\n  email:String\r\n}\r\ntype Query{\r\n  profile(ukey: String!): Profile\r\n}\r\ntype Mutation{\r\n  register(email: String!, password: String!, confirmation: String!):RegisteredUser\r\n  login(email: String!, password: String!) : AccessToken\r\n  confirm(email: String!): Boolean\r\n}"
+module.exports = "type RegisteredUser{\r\n  ukey: ID,\r\n  confirm_token: ID\r\n}\r\ntype AccessToken{\r\n  ukey: ID,\r\n  access_token: ID\r\n}\r\ntype Profile{\r\n  ukey: ID,\r\n  email:String\r\n}\r\ntype Query{\r\n  profile : Profile\r\n}\r\ntype Mutation{\r\n  register(email: String!, password: String!, confirmation: String!):RegisteredUser\r\n  login(email: String!, password: String!) : AccessToken\r\n  confirm(email: String!): Boolean\r\n  refresh: AccessToken\r\n}"
+});
+___scope___.file("node-test/routes/forecast.js", function(exports, require, module, __filename, __dirname){
+
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const graphql_1 = require("graphql");
+const node_fetch_1 = __importDefault(require("node-fetch"));
+exports.default = {
+    rootValue: {
+        async getForecast({ location }) {
+            const requestOptions = {
+                method: "GET"
+            };
+            const response = await node_fetch_1.default(`http://api.weatherapi.com/v1/forecast.json?key=b11f7c983a874854994103425211607&q=${location}&days=3&lang=pl`, requestOptions);
+            const data = await response.json();
+            return data;
+        }
+    },
+    schema: graphql_1.buildSchema(require("../graphql/forecast.gql")),
+};
+
+});
+___scope___.file("node-test/graphql/forecast.gql", function(exports, require, module, __filename, __dirname){
+
+module.exports = "type Location {\r\n  name: String\r\n  region: String\r\n  country: String\r\n  localtime: String\r\n}\r\ntype Condition {\r\n text:String\r\n icon: String\r\n code: Float\r\n}\r\ntype Hour{\r\n  time: String,\r\n  temp_c: Float,\r\n  condition:Condition,\r\n  wind_kph: Float,\r\n  wind_degree: Float,\r\n  wind_dir: String,\r\n  pressure_mb: Float,\r\n  precip_mm: Float,\r\n  humidity: Float,\r\n  cloud: Float,\r\n  feelslike_c: Float,\r\n  windchill_c: Float,\r\n  heatindex_c: Float,\r\n  dewpoint_c: Float,\r\n  will_it_rain: Float,\r\n  chance_of_rain: String,\r\n  will_it_snow: Float,\r\n  chance_of_snow: String,\r\n  vis_km: Float,\r\n  gust_kph: Float,\r\n  uv: Float\r\n}\r\ntype Day{\r\n maxtemp_c: Float,\r\n    mintemp_c: Float,\r\n    avgtemp_c: Float,\r\n    maxwind_kph: Float,\r\n    totalprecip_mm: Float,\r\n    avgvis_km: Float,\r\n    avghumidity: Float,\r\n    daily_will_it_rain: Float,\r\n    daily_chance_of_rain: String,\r\n    daily_will_it_snow: Float,\r\n    daily_chance_of_snow: String,\r\n    condition: Condition\r\n}\r\ntype ForecastDay{\r\n  date: String,\r\n  day: Day,\r\n  hour: [Hour!]!\r\n}\r\ntype Current {\r\n  last_updated_epoch: Float\r\n  last_updated: String\r\n  temp_c: Float\r\n  temp_f: Float\r\n  is_day: Boolean\r\n  condition: Condition\r\n  wind_mph: Float\r\n  wind_kph: Float\r\n  wind_degree: Float\r\n  wind_dir: String\r\n  pressure_mb: Float\r\n  pressure_in: Float\r\n  precip_mm: Float\r\n  precip_in: Float\r\n  humidity: Float\r\n  cloud: Float\r\n  feelslike_c: Float\r\n  feelslike_f: Float\r\n  vis_km: Float\r\n  vis_miles: Float\r\n  uv: Float\r\n  gust_mph: Float\r\n  gust_kph: Float\r\n}\r\ntype ForecastThreeDays{\r\n  forecastday: [ForecastDay]!\r\n}\r\ntype Forecast {\r\n  location: Location\r\n  current: Current\r\n  forecast: ForecastThreeDays!\r\n}\r\ntype Query {\r\n  getForecast(location : String!): Forecast\r\n}\r\n"
 });
 return ___scope___.entry = "node-test/index.js";
 });

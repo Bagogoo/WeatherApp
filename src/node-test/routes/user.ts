@@ -5,7 +5,6 @@ import { Result } from "../models/result";
 import { hash, compare } from "bcryptjs";
 import { UserForCreation } from "../models/userForCreation";
 import { v4 as uuidv4 } from "uuid";
-import { users } from ".";
 export default {
   rootValue: {
     async getUserByKey({ ukey }: { ukey: string }): Promise<User | undefined> {
@@ -21,29 +20,14 @@ export default {
       ).rows;
       return row;
     },
-    async register({
-      email,
-      password,
-      confirmation,
-    }: {
-      email: string;
-      password: string;
-      confirmation: string;
-    }) {
+    async register({ email, password, confirmation,
+    }: { email: string, password: string, confirmation: string }): Promise<Result<any>> {
       if (password !== confirmation) {
-        const result: Result<Error> = {
-          data: Error("Podane hasła nie zgadzają się"),
-          status: 400,
-        };
-        return result.data;
+        throw new Error("Hasła nie zgadzają się");
       }
       const u = await this.getUserByEmail({ email });
       if (u != undefined) {
-        const result: Result<Error> = {
-          data: Error("Użytkownik o podanym mailu istnieje"),
-          status: 400,
-        };
-        return result.data;
+        throw new Error("Użytkownik o podanym mailu istnieje");
       }
       const hpass = await hash(password, 12);
       const user: UserForCreation = {
@@ -52,68 +36,62 @@ export default {
         ukey: uuidv4()
       };
       const [row] = await this.query<User>('INSERT INTO users (ukey, email, password) VALUES ($1, $2, $3) RETURNING  ukey, email, password', [user.ukey, user.email, user.password]);
-      return row;
+      const result: Result<any> = {
+        data: {
+          ukey: row.ukey,
+          confirm_token: 'ConfirmToken'
+        }, status: 200
+      }
+      return result.data;
     },
 
     async confirm({ email }: { email: string }, context: any) {
-      const u = await this.getUserByEmail({ email });
-      if (u === undefined) {
-        const result: Result<Error> = {
-          data: Error("Użytkownik nie istnieje"),
-          status: 400,
-        }
-        return result.data;
+      const user = await this.getUserByEmail({ email });
+      if (user === undefined) {
+        throw new Error("Użytkownik nie istnieje");
       }
-      if (u.confirmed === true) {
-        const result: Result<Error> = {
-          data: Error("Użytkownik potwierdzony"),
-          status: 400,
-        }
-        return result.data;
+      if (user.confirmed === true) {
+        throw Error("Użytkownik już potwierdzony");
       }
       const success = await this.query<User>("UPDATE Users SET confirm=true where email = $1", [email]);
       if (!success) {
-        const result: Result<Error> = {
-          data: Error("Wystąpił błąd"),
-          status: 500,
-        }
-        return result.data;
+        throw Error("Wystąpił błąd");
       }
       return true;
     },
 
     async login(
-      { email, password }: { email: string; password: string }
+      { email, password }: { email: string; password: string }, context: any
     ) {
-      const u = await this.getUserByEmail({ email });
-      if (u === undefined) {
-        const result: Result<Error> = {
-          data: Error("Użytkownik nie istnieje"),
-          status: 400,
-        }
-        return result.data;
+      const user = await this.getUserByEmail({ email });
+      if (user === undefined) {
+        context.res.status(400);
+        throw new Error("Użytkownik nie istnieje");
       }
-      if (u.confirmed==false) {
-        const result: Result<Error> = {
-          data: Error("Użytkownik nie potwierdzony"),
-          status: 401,
-        }
-        return result.data;
+      if (user.confirmed == false) {
+        context.res.status(400);
+        throw new Error("Użytkownik niepotwierdzony");
       }
-      const valid = await compare(password, u.password);
+      const valid = await compare(password, user.password);
       if (valid) {
-        const accessToken = `accesss-token-${u.ukey}`;
+        const accessToken = `accesss-token-${user.ukey}`;
         const result: Result<any> = {
           data:
-            { ukey: u.ukey, access_token: accessToken },
+            { ukey: user.ukey, access_token: accessToken },
           status: 200
         }
+        context.res.status(200);
         return result.data;
       }
     },
 
-    async profile({ ukey }: { ukey: string }, context: any) {
-      return { ukey: "ukey", email: "email" };
+    async profile(ukey: { ukey: string }, context: any) {
+      const user = await this.getUserByKey(ukey);
+      if (user === undefined) {
+        context.res.status(404);
+        throw new Error('Użytkownik nieprawidłowy')
+      }
+      return user;
     },
     async query<T>(command: string, values?: any[]) {
       const result = await pool.query<T>(command, values);

@@ -11,10 +11,11 @@ type Profile{
   email:String
 }
 type Query{
-  profile(ukey: String!): Profile
+  profile : Profile
 }
 type Mutation{
   register(email: String!, password: String!, confirmation: String!):RegisteredUser
   login(email: String!, password: String!) : AccessToken
   confirm(email: String!): Boolean
+  refresh: AccessToken
 }
