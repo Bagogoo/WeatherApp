@@ -130,6 +130,10 @@ exports.default = {
                 context.res.status(200);
                 return result.data;
             }
+            else {
+                context.res.status(400);
+                throw new Error("Hasło nieprawidłowe");
+            }
         },
         async profile(ukey, context) {
             const user = await this.getUserByKey(ukey);
@@ -166,7 +170,7 @@ exports.pool = new pg_1.Pool({
 });
 ___scope___.file("node-test/graphql/user.gql", function(exports, require, module, __filename, __dirname){
 
-module.exports = "type RegisteredUser{\r\n  ukey: ID,\r\n  confirm_token: ID\r\n}\r\ntype AccessToken{\r\n  ukey: ID,\r\n  access_token: ID\r\n}\r\ntype Profile{\r\n  ukey: ID,\r\n  email:String\r\n}\r\ntype Query{\r\n  profile : Profile\r\n}\r\ntype Mutation{\r\n  register(email: String!, password: String!, confirmation: String!):RegisteredUser\r\n  login(email: String!, password: String!) : AccessToken\r\n  confirm(email: String!): Boolean\r\n  refresh: AccessToken\r\n}"
+module.exports = "type RegisteredUser{\r\n  ukey: ID,\r\n  confirm_token: ID\r\n}\r\ntype AccessToken{\r\n  ukey: ID,\r\n  access_token: ID\r\n}\r\ntype Profile{\r\n  ukey: ID,\r\n  email:String,\r\n  cities: String\r\n}\r\ntype Query{\r\n  profile(ukey: String!) : Profile\r\n}\r\ntype Mutation{\r\n  register(email: String!, password: String!, confirmation: String!):RegisteredUser\r\n  login(email: String!, password: String!) : AccessToken\r\n  confirm(email: String!): Boolean\r\n  refresh: AccessToken\r\n}"
 });
 ___scope___.file("node-test/routes/forecast.js", function(exports, require, module, __filename, __dirname){
 

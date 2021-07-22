@@ -1,18 +1,14 @@
 <template>
     <div id="weather">
-      <div class="search-box">
-    <input class="search-bar" placeholder="Szukaj" v-model="data.location" /> <br>
-      </div>
-     <button @click="getForecast()">Szukaj</button>
-    <div class="weather-wrap" v-for="data in data.forecast[0]"  :key="data.location.name">
-      <div class="location-box">
-        <div class="location">{{data.location.name}},{{data.location.country}} </div>
-        <div class="date">{{data.location.localtime}}</div>
-      </div>
-      <div class="weather-box">
-      <div class="temp">{{data.current.temp_c}} &deg;C</div>
-      <div class="conditions">{{data.current.condition.text}}</div>
-      </div>
+      <b-row class="search-box ">
+    <input class="search-bar" placeholder="Szukaj" v-model="data.location" required  /><b-icon-bullseye class="location" @click="getLocation()"></b-icon-bullseye><br>
+      </b-row>
+     <button class="btn-search" @click="getForecast()">Dodaj</button>
+    <b-row>
+     <b-col  lg="4" md="12" xl="3" v-for="(forecast, index) in data.forecast" v-bind:key="index">
+    <CurrentWeather :currentWeather="forecast"/>  
+    </b-col>
+    </b-row>
     </div>
 </template>
 
@@ -26,55 +22,54 @@
     padding: 20px;
   }
   .search-box{
-    width: 100%;
+    width: 80%;
     margin-bottom: 30px;
   }
   .search-box .search-bar{
-    display: block;
-    width: 100%;
-    padding: 15px;
+    display: inline-block;
+    width: 90%;
+    padding: 15px 15px 15px 0px;
     color:black;
     font-size: 20px;
     appearance: none;
     border: none;
     outline: none;
     background-color: rgba(255,255,255,0.5);
-    border-radius: 0px 16px 0px 16px;
+    border-radius: 0px 0px 0px 16px;
   }
-  .location-box .location{
-    color:white;
-    font-size: 32px;
-    font-weight: 500;
-    text-align: center;
-    text-shadow: 1px 3px rgba(0,0,0,0.5);
+  .search-box .location{
+    display: inline-block;
+    width: auto;
+    height: auto;
+    padding: auto;
+    color:black;
+    font-size: 40px;
+    appearance: none;
+    border: none;
+    outline: none;
+    background-color: rgba(255,255,255,0.5);
+     border-radius: 0px 0px 16px 0px;
   }
-  .location-box .date{
+  .btn-search{
+    display: inline-block;
+    padding: 10px;
+    color:black;
+    font-size: 20px;
+    appearance: none;
+    border: none;
+    outline: none;
+    background-color: rgba(255,255,255,0.75);
+    border-radius: 5px;
+  }
+   .btn-search  :hover{
+    display: inline-block;
+    padding: 10px;
     color:white;
     font-size: 20px;
-    font-weight: 300;
-    text-align: center;
-    font-style: italic;
-  }
-  .weather-box{
-    text-align: center;
-  }
-  .weather-box .temp{
-    display: inline-block;
-    padding: 10px 25px;
-    color: white;
-    font-size: 100px;
-    font-weight: 900;
-    text-shadow: 3px 6px rgba(0,0,0,0.25);
-    background-color: rgba(255,255,255,0.25);
-    border-radius: 16px;
-    margin: 30px 0px;
-    box-shadow: 3px 6px rgba(0,0,0,0.25);;
-  }
-  .weather-box .conditions{
-    color:white;
-    font-size: 40px;
-    font-weight: 500;
-    text-align: center;
-    font-style: italic;
+    appearance: none;
+    border: none;
+    outline: none;
+    background-color: rgba(43, 36, 36, 0.75);
+    border-radius: 5px;
   }
 </style>

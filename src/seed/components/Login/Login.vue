@@ -1,5 +1,6 @@
 <template>
     <div>
+      <div class="warning">{{this.data.error}}</div>
     <b-form v-if="!data.submitted">
       <b-form-group
         id="input-group-1"
@@ -26,9 +27,15 @@
 
 
       <b-button type="submit" @click="login(data.email, data.password)" variant="primary">Zaloguj</b-button>
-  
+    
     </b-form>
     </div>
 </template>
 
 <script src="./Login.ts" />
+<style scoped>
+.warning{
+  color:red;
+  size: 50px;
+}
+</style>

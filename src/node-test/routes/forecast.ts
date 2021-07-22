@@ -52,7 +52,7 @@ interface ForecastDay {
   hour: [Hour]
 }
 
-interface apiResponse {
+export interface ApiResponse {
   location: {
     name: string,
     region: string,
@@ -104,7 +104,7 @@ export default {
       };
       const response = await fetch(`http://api.weatherapi.com/v1/forecast.json?key=b11f7c983a874854994103425211607&q=${location}&days=3&lang=pl`, requestOptions);
 
-      const data: apiResponse = await response.json();
+      const data: ApiResponse = await response.json();
       return data;
     }
   },

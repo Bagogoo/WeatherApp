@@ -13,19 +13,14 @@ new Vue({
         routes: [
             {
                 path: '/',
-                name: 'Compare',
-                component: () => import('./components/Compare')
+                name: 'Forecast',
+                component: () => import('./components/Forecast')
             },
             {
                 path: '/login',
                 name: 'Login',                
                 component: () => import('./components/Login')
-            },
-            {
-                path: '/pogoda',
-                name: 'Forecast',
-                component: () => import('./components/Forecast')
-            },
+            }
             
         ]
     }),

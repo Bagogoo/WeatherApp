@@ -8,10 +8,11 @@ type AccessToken{
 }
 type Profile{
   ukey: ID,
-  email:String
+  email:String,
+  cities: String
 }
 type Query{
-  profile : Profile
+  profile(ukey: String!) : Profile
 }
 type Mutation{
   register(email: String!, password: String!, confirmation: String!):RegisteredUser

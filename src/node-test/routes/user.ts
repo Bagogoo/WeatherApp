@@ -77,11 +77,15 @@ export default {
         const accessToken = `accesss-token-${user.ukey}`;
         const result: Result<any> = {
           data:
-            { ukey: user.ukey, access_token: accessToken },
+            { ukey: user.ukey, access_token: accessToken},
           status: 200
         }
         context.res.status(200);
         return result.data;
+      }
+      else {
+        context.res.status(400);
+        throw new Error("Hasło nieprawidłowe");
       }
     },
 

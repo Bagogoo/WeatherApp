@@ -1,10 +1,12 @@
 import Vue from 'vue';
-import { users } from '../../services/userDataService'
+import { User, users } from '../../services/userDataService'
 interface Data {
     data: {
         email: string,
         password: string,
-        submitted: boolean
+        submitted: boolean,
+        error: string | null,
+        returnedUser: User | null
     }
 }
 export default Vue.extend({
@@ -14,14 +16,26 @@ export default Vue.extend({
             data: {
                 email: '',
                 password: '',
-                submitted: false
+                submitted: false,
+                error: null,
+                returnedUser: null
             }
         }
     },
     methods: {
         async login(email: string, password: string) {
-            console.log(await users.login(email, password));
-            console.log(localStorage.getItem('ukey'));
+            try {
+                await users.login(email, password).then((response) => {
+                    this.data.returnedUser = response;
+                    console.log(this.data.returnedUser);
+                    return response;
+                });
+
+            }
+            catch (error) {
+                this.data.error = error;
+            }
+           
         }
     }
 });
