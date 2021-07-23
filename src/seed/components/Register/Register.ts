@@ -1,33 +1,32 @@
 import Vue from 'vue';
-import { LoginResponse, User, users } from '../../services/userDataService'
+import { users } from '../../services/userDataService'
 interface Data {
     data: {
         email: string,
         password: string,
+        confirmation: string,
         submitted: boolean,
         error: string | null,
-        returnedUser: LoginResponse[] 
     }
 }
 export default Vue.extend({
-    name: 'Login',
+    name: 'Register',
     data(): Data {
         return {
             data: {
                 email: '',
                 password: '',
+                confirmation:'',
                 submitted: false,
-                error: null,
-                returnedUser: []
+                error: null
             }
         }
     },
     methods: {
-        async login(email: string, password: string) {
+        async register(email: string, password: string, confirmation: string) {
             try {
-                await users.login(email, password).then((response) => {
-                    this.data.returnedUser?.push(response);
-                    console.log(this.data.returnedUser);
+                await users.register(email, password, confirmation).then((response) => {
+                    alert('Pomyślnie zarejestrowano');
                     return response;
                 });
 

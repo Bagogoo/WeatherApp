@@ -13,13 +13,19 @@ new Vue({
         routes: [
             {
                 path: '/',
-                name: 'Forecast',
+                name: 'forecast',
+                props: (route)=>({query: route.query.locationProp}) ,
                 component: () => import('./components/Forecast')
             },
             {
                 path: '/login',
                 name: 'Login',                
                 component: () => import('./components/Login')
+            },
+            {
+                path: '/register',
+                name: 'Register',                
+                component: () => import('./components/Register')
             }
             
         ]

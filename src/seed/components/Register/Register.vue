@@ -25,18 +25,21 @@
         ></b-form-input>
       </b-form-group>
 
-
-      <b-button type="submit" @click="login(data.email, data.password)" variant="primary">Zaloguj</b-button>
+   <b-form-group id="input-group-2" label="Powtórz hasło:" label-for="input-2">
+        <b-form-input
+          id="input-2"
+          v-model="data.confirmation"
+          placeholder="Powtórz hasło"
+          required
+        ></b-form-input>
+      </b-form-group>
+      <b-button type="submit" @click="register(data.email, data.password, data.confirmation)" variant="primary">Zarejestruj</b-button>
     
     </b-form>
-    <div v-if="this.data.returnedUser[0]!=undefined">
-     {{this.data.returnedUser[0].login.ukey}}
-     <router-link :to="{ name: 'forecast', query:{locationProp:'Sosnowiec'}}">Siema</router-link>
-    </div>
     </div>
 </template>
 
-<script src="./Login.ts" />
+<script src="./Register.ts" />
 <style scoped>
 .warning{
   color:red;

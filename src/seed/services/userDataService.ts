@@ -13,7 +13,10 @@ export interface User {
 }
 
 export interface LoginResponse {
-  user: User;
+  login: {
+      access_token: string;
+      ukey: string;
+  }
 }
 
 export interface RegisterResponse {
@@ -55,9 +58,9 @@ export const users = {
   async register(email: string, password: string, confirmation: string) {
     return await base.query<User>('user', `
     mutation{
-      createUser(email: "${email}",
-         password:${password},
-         confirmation:"${confirmation}"}){
+      register(email: "${email}",
+         password:"${password}",
+         confirmation:"${confirmation}"){
           ukey,
           confirm_token
       }
@@ -65,7 +68,7 @@ export const users = {
     `)
   },
   async login(email: string, password: string) {
-    const user = await base.query<User>('user', `
+    const user = await base.query<LoginResponse>('user', `
     mutation{
       login(email:"${email}", password:"${password}"){
        ukey,
