@@ -16,9 +16,10 @@
         ></b-form-input>
       </b-form-group>
 
-      <b-form-group id="input-group-2" label="Hasło:" label-for="input-2">
+      <b-form-group  id="input-group-2" label="Hasło:" label-for="input-2">
         <b-form-input
           id="input-2"
+          type="password"
           v-model="data.password"
           placeholder="Wpisz hasło"
           required
@@ -29,10 +30,6 @@
       <b-button type="submit" @click="login(data.email, data.password)" variant="primary">Zaloguj</b-button>
     
     </b-form>
-    <div v-if="this.data.returnedUser[0]!=undefined">
-     {{this.data.returnedUser[0].login.ukey}}
-     <router-link :to="{ name: 'forecast', query:{locationProp:'Sosnowiec'}}">Siema</router-link>
-    </div>
     </div>
 </template>
 

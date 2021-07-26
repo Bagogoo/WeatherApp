@@ -68,7 +68,7 @@ export default {
         context.res.status(400);
         throw new Error("Użytkownik nie istnieje");
       }
-      if (user.confirmed == false) {
+      if (user.confirmed === false) {
         context.res.status(400);
         throw new Error("Użytkownik niepotwierdzony");
       }

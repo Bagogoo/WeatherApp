@@ -14,7 +14,13 @@ new Vue({
             {
                 path: '/',
                 name: 'forecast',
-                props: (route)=>({query: route.query.locationProp}) ,
+                props: true ,
+                component: () => import('./components/Forecast')
+            },
+            {
+                path: '/logged/:ukey',
+                name: 'logged',
+                props: true ,
                 component: () => import('./components/Forecast')
             },
             {

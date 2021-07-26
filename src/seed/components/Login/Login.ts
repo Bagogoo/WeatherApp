@@ -27,7 +27,10 @@ export default Vue.extend({
             try {
                 await users.login(email, password).then((response) => {
                     this.data.returnedUser?.push(response);
-                    console.log(this.data.returnedUser);
+                    localStorage.setItem('access_token', response.login.ukey);
+                    this.$router.push('/');
+                    location.reload();
+                    
                     return response;
                 });
 
@@ -36,6 +39,9 @@ export default Vue.extend({
                 this.data.error = error;
             }
            
+        },
+        setAccessToken(access_token:string) {
+            localStorage.setItem('access_token', access_token);
         }
     }
 });

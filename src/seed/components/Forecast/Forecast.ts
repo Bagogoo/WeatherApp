@@ -42,7 +42,12 @@ export default Vue.extend({
                     this.data.location = `${position.coords.latitude}, ${position.coords.longitude}`;
                 }
             )
-        }
+        },
+        onKeydown(e: KeyboardEvent) {
+           if(e.key === 'Enter') {
+                this.getForecast();
+            }
+          }
     }
 
 });
