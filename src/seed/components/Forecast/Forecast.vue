@@ -3,7 +3,7 @@
       <b-row class="search-box ">
     <input class="search-bar" placeholder="Szukaj" v-model="data.location" required  @keydown="onKeydown($event)" /><b-icon-bullseye class="location" @click="getLocation()"></b-icon-bullseye><br>
       </b-row>
-     <button class="btn-search" @click="getForecast()">Dodaj</button>
+     <button class="btn-search" @click="addCity()">Dodaj</button>
     <b-row>
      <b-col  lg="4" md="12" xl="3" v-for="(forecast, index) in data.forecast" v-bind:key="index">
     <CurrentWeather :currentWeather="forecast"/>  
@@ -20,8 +20,10 @@
     background-position: bottom;
     transition: 0.4s;
     padding: 20px;
+    text-align: center;
   }
   .search-box{
+    margin: auto;
     width: 80%;
     margin-bottom: 30px;
   }
@@ -60,6 +62,7 @@
     outline: none;
     background-color: rgba(255,255,255,0.75);
     border-radius: 5px;
+    margin: auto;
   }
    .btn-search  :hover{
     display: inline-block;

@@ -1,5 +1,6 @@
 <template>
     <div id="weather">
+      <Forecast :locationProp='data.location'/>
     </div>
 </template>
 

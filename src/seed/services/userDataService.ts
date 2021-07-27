@@ -1,3 +1,5 @@
+import { getParsedCommandLineOfConfigFile } from "typescript";
+
 interface GraphQLError {
   message: string;
 }
@@ -18,7 +20,12 @@ export interface LoginResponse {
       ukey: string;
   }
 }
-
+export interface Profile {
+  profile: {
+    ukey: string;
+    cities: string;
+  }
+}
 export interface RegisterResponse {
   ukey: string,
   confirm_token: string
@@ -79,7 +86,15 @@ export const users = {
     
     return user;
   },
-  async logout() {
-    localStorage.removeItem('ukey');
-  },
+  async getProfile(ukey: string) {
+    if (ukey != null) {
+      const profile = await base.query<Profile>('user', `query{
+      profile(ukey: "${ukey}"){
+        ukey
+        cities
+      }
+    }`);
+      return profile;
+    }
+  }
 }

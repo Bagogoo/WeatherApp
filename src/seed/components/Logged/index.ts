@@ -1,2 +1,2 @@
-import Logged from './Loggedt.vue';
+import Logged from './Logged.vue';
 export default Logged;

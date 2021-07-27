@@ -1,6 +1,6 @@
 <template>
  <div id="weather">
-    <div class="weather-wrap" v-for="data in this.currentWeather"  :key="data.location.name">
+    <div class="weather-wrap" v-for="data in currentWeather"  :key="data.location.name">
       <div class="location-box">
          <img class="icon" v-bind:src="data.current.condition.icon">
         <div class="location">{{data.location.name}},{{data.location.country}} </div>
@@ -12,7 +12,7 @@
       <div class="conditions">{{data.current.condition.text}}</div>
       </div>
        <b-row>
-     <div v-for="(daily, index) in data.forecast" v-bind:key="index">
+     <div v-for="(daily, index) in data.forecast" :key="index">
        <DailyForecast :dayWeather="daily"/>
     <div>
     </b-row>

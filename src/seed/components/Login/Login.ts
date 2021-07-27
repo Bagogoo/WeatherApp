@@ -4,9 +4,8 @@ interface Data {
     data: {
         email: string,
         password: string,
-        submitted: boolean,
         error: string | null,
-        returnedUser: LoginResponse[] 
+        submitted: boolean
     }
 }
 export default Vue.extend({
@@ -16,9 +15,8 @@ export default Vue.extend({
             data: {
                 email: '',
                 password: '',
-                submitted: false,
                 error: null,
-                returnedUser: []
+                submitted: false
             }
         }
     },
@@ -26,9 +24,8 @@ export default Vue.extend({
         async login(email: string, password: string) {
             try {
                 await users.login(email, password).then((response) => {
-                    this.data.returnedUser?.push(response);
                     localStorage.setItem('access_token', response.login.ukey);
-                    this.$router.push('/');
+                    this.$router.push('/logged');
                     location.reload();
                     
                     return response;
@@ -39,9 +36,6 @@ export default Vue.extend({
                 this.data.error = error;
             }
            
-        },
-        setAccessToken(access_token:string) {
-            localStorage.setItem('access_token', access_token);
         }
     }
 });

@@ -1,7 +1,7 @@
 <template>
 <div>
   
-<div v-for="data in this.dayWeather" :key='data.date'>
+<div v-for="data in dayWeather" :key='data.date'>
 <img  v-bind:src="data.day.condition.icon"><br>
 Data: {{data.date}} <br>
 Temp: {{data.day.avgtemp_c}} <br>

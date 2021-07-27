@@ -1,53 +1,74 @@
 import Vue from 'vue';
 import { Forecast, forecastService } from '../../services/forecastDataservice';
 import CurrentWeather from '../CurrentWeather';
-import { BIcon, BIconBullseye} from 'bootstrap-vue';
-import { response } from 'express';
+import { BIcon, BIconBullseye } from 'bootstrap-vue';
 
 
 interface Data {
     data: {
         forecast: Forecast[],
-        location: string,
-        dataLoaded: boolean
+        locationArray: Array<string>,
+        dataLoaded: boolean,
+        location:string
     }
 }
 
 export default Vue.extend({
     name: 'Forecast',
-    components: {CurrentWeather, BIcon, BIconBullseye},
+    components: { CurrentWeather, BIcon, BIconBullseye },
     props: {
         locationProp: String
     },
     data(): Data {
         return {
             data: {
-                forecast:[],
-                location: this.locationProp,
-                dataLoaded: false
+                forecast: [],
+                locationArray:[],
+                dataLoaded: false,
+                location:''
             }
         }
     },
     methods: {
+            
         async getForecast() {
-            const forecastResponse = (await forecastService.getForecast(this.data.location).then((response) => {
-                this.data.forecast?.push(response);
-                this.data.dataLoaded = true;
-                this.data.location = '';
-            }));
+            this.data.locationArray.forEach((value) => {
+                forecastService.getForecast(value).then((response) => {
+                    this.data.forecast?.push(response);
+                    this.data.dataLoaded = true;
+                    return response;
+                });
+            })
+            this.data.locationArray.splice(0, this.data.locationArray.length);
         },
+        async addCity() {
+            this.data.locationArray.push(this.data.location);
+            this.getForecast();
+            this.data.location = '';
+         },
         async getLocation() {
             navigator.geolocation.getCurrentPosition(
                 position => {
-                    this.data.location = `${position.coords.latitude}, ${position.coords.longitude}`;
+                    this.data.location=( `${position.coords.latitude}, ${position.coords.longitude}`);
                 }
             )
         },
+        getCitiesFromProp(str: string) {
+            if (str != '') {
+                const arr: Array<string> = str.split(',');
+                arr.forEach((value) => {
+                    this.data.locationArray.push(value);
+                })
+            }
+        },
         onKeydown(e: KeyboardEvent) {
-           if(e.key === 'Enter') {
+            if (e.key === 'Enter') {
                 this.getForecast();
             }
-          }
+        }
+    },
+    beforeMount() {
+        this.getCitiesFromProp(this.locationProp);
+        this.getForecast();
     }
-
 });
