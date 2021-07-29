@@ -1,22 +1,28 @@
-type RegisteredUser{
-  ukey: ID,
+type RegisteredUser {
+  ukey: ID
   confirm_token: ID
 }
-type AccessToken{
-  ukey: ID,
+type AccessToken {
+  ukey: ID
   access_token: ID
 }
-type Profile{
-  ukey: ID,
-  email:String,
+type Profile {
+  ukey: ID
+  email: String
   cities: String
 }
-type Query{
-  profile(ukey: String!) : Profile
+type Query {
+  profile(ukey: String!): Profile
+  validate(ukey: String!): Boolean
 }
-type Mutation{
-  register(email: String!, password: String!, confirmation: String!):RegisteredUser
-  login(email: String!, password: String!) : AccessToken
+type Mutation {
+  register(
+    email: String!
+    password: String!
+    confirmation: String!
+  ): RegisteredUser
+  login(email: String!, password: String!): AccessToken
   confirm(email: String!): Boolean
   refresh: AccessToken
+  saveCities(cities: String!, ukey: String!): Boolean
 }

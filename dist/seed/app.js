@@ -22,14 +22,7 @@ new vue_1.default({
             {
                 path: '/',
                 name: 'forecast',
-                props: true,
                 component: () => $fsmp$("~/seed/components/Forecast/index.js")
-            },
-            {
-                path: '/logged',
-                name: 'logged',
-                props: true,
-                component: () => $fsmp$("~/seed/components/Logged/index.js")
             },
             {
                 path: '/login',
@@ -101,25 +94,60 @@ ___scope___.file("seed/components/Nav/Nav.vue", function(exports, require, modul
 var _options = { _vueModuleId: 'data-v-88fa774e' };
 Object.assign(_options, {
     _scopeId: null,
-    render: function render() { var _vm = this; var _h = _vm.$createElement; var _c = _vm._self._c || _h; return _c('div', [_c('div', [(!this.isloggedIn()) ? _c('b-nav', { attrs: { "tabs": "", "fill": "" } }, [_c('b-nav-item', { attrs: { "href": "/" } }, [_vm._v("Home")]), _vm._v(" "), _c('b-nav-item', { attrs: { "href": "/#/login" } }, [_vm._v("Logowanie")]), _vm._v(" "), _c('b-nav-item', { attrs: { "href": "/#/register" } }, [_vm._v("Rejestracja")])], 1) : _c('b-nav', { attrs: { "tabs": "", "fill": "" } }, [_c('b-nav-item', { attrs: { "href": "/" } }, [_vm._v("Home")]), _vm._v(" "), _c('b-nav-item', { on: { "click": function ($event) { return _vm.logout(); } } }, [_vm._v("Wyloguj")])], 1)], 1)]); },
+    render: function render() { var _vm = this; var _h = _vm.$createElement; var _c = _vm._self._c || _h; return _c('div', [_c('div', [(!_vm.data.isValid) ? _c('b-nav', { attrs: { "tabs": "", "fill": "" } }, [_c('b-nav-item', { attrs: { "href": "/" } }, [_vm._v("Home")]), _vm._v(" "), _c('b-nav-item', { attrs: { "href": "/#/login" } }, [_vm._v("Logowanie")]), _vm._v(" "), _c('b-nav-item', { attrs: { "href": "/#/register" } }, [_vm._v("Rejestracja")])], 1) : _c('b-nav', { attrs: { "tabs": "", "fill": "" } }, [_c('b-nav-item', { attrs: { "href": "/" } }, [_vm._v("Home")]), _vm._v(" "), _c('b-nav-item', { on: { "click": function ($event) { return _vm.logout(); } } }, [_vm._v("Wyloguj")])], 1)], 1)]); },
     staticRenderFns: []
 });
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try {
+            step(generator.next(value));
+        }
+        catch (e) {
+            reject(e);
+        } }
+        function rejected(value) { try {
+            step(generator["throw"](value));
+        }
+        catch (e) {
+            reject(e);
+        } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const vue_1 = __importDefault(require("vue"));
+const userDataService_1 = require("../../services/userDataService");
 exports.default = vue_1.default.extend({
     name: 'Nav',
+    data() {
+        return {
+            data: {
+                isValid: false
+            }
+        };
+    },
+    mounted() {
+        return __awaiter(this, void 0, void 0, function* () {
+            this.isloggedIn();
+        });
+    },
     methods: {
         isloggedIn() {
-            if (localStorage.getItem('access_token')) {
-                return true;
-            }
+            return __awaiter(this, void 0, void 0, function* () {
+                yield userDataService_1.users.validate(localStorage.getItem('ukey')).then(response => {
+                    this.data.isValid = response;
+                    return response;
+                });
+            });
         },
         logout() {
-            localStorage.removeItem('access_token');
+            localStorage.removeItem('ukey');
             location.reload();
         }
     }
@@ -133,6 +161,106 @@ if (process.env.NODE_ENV !== "production") {
     }
 }
 //# sourceMappingURL=Nav.vue.js.map
+});
+___scope___.file("seed/services/userDataService.js", function(exports, require, module, __filename, __dirname){
+
+"use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.users = void 0;
+const base = {
+    address: 'http://localhost:3000',
+    query(domain, query, variables) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const res = yield fetch(`${this.address}/${domain}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ query, variables })
+            });
+            if (res.status === 404) {
+                throw Error(yield res.text());
+            }
+            const json = yield res.json();
+            if (json.errors) {
+                throw Error(json.errors[0].message);
+            }
+            return json.data;
+        });
+    }
+};
+exports.users = {
+    register(email, password, confirmation) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield base.query('user', `
+    mutation{
+      register(email: "${email}",
+         password:"${password}",
+         confirmation:"${confirmation}"){
+          ukey,
+          confirm_token
+      }
+    }
+    `);
+        });
+    },
+    login(email, password) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const user = yield base.query('user', `
+    mutation{
+      login(email:"${email}", password:"${password}"){
+       ukey,
+       access_token
+     }
+   }
+    `);
+            return user;
+        });
+    },
+    validate(ukey) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (ukey !== null) {
+                const isValid = yield base.query('user', `query{
+      validate(ukey: "${ukey}")}`);
+                return isValid.validate;
+            }
+            else
+                return false;
+        });
+    },
+    saveCities(cities, ukey) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (cities != null && ukey != null) {
+                return yield base.query('user', `mutation{
+        saveCities(cities:"${cities}", ukey:"${ukey}")
+      }`);
+            }
+        });
+    },
+    getProfile(ukey) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (ukey != null) {
+                const profile = yield base.query('user', `query{
+      profile(ukey: "${ukey}"){
+        ukey
+        cities
+      }
+    }`);
+                return profile;
+            }
+        });
+    }
+};
+//# sourceMappingURL=userDataService.js.map
 });
 ___scope___.file("seed/components/Footer/index.js", function(exports, require, module, __filename, __dirname){
 
@@ -151,8 +279,8 @@ ___scope___.file("seed/components/Footer/Footer.vue", function(exports, require,
 var _options = { _vueModuleId: 'data-v-20cfb32e' };
 Object.assign(_options, {
     _scopeId: null,
-    render: function render() { var _vm = this; var _h = _vm.$createElement; var _c = _vm._self._c || _h; return _c('div', { staticClass: "footer-copyright text-center py-3" }, [_vm._v("\n  © 2021 Siema\n")]); },
-    staticRenderFns: []
+    render: function render() { var _vm = this; var _h = _vm.$createElement; var _c = _vm._self._c || _h; return _vm._m(0); },
+    staticRenderFns: [function render() { var _vm = this; var _h = _vm.$createElement; var _c = _vm._self._c || _h; return _c('div', { staticClass: "footer-copyright text-center py-3" }, [_vm._v("\n  © 2021 Siema Powered by "), _c('a', { attrs: { "href": "https://www.weatherapi.com/", "title": "Weather API" } }, [_vm._v("WeatherAPI.com")])]); }]
 });
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
@@ -198,7 +326,7 @@ Object.assign(_options, {
     _scopeId: "data-v-6bd811ee",
     render: function render() { var _vm = this; var _h = _vm.$createElement; var _c = _vm._self._c || _h; return _c('div', { attrs: { "id": "weather" } }, [_c('b-row', { staticClass: "search-box " }, [_c('input', { directives: [{ name: "model", rawName: "v-model", value: (_vm.data.location), expression: "data.location" }], staticClass: "search-bar", attrs: { "placeholder": "Szukaj", "required": "" }, domProps: { "value": (_vm.data.location) }, on: { "keydown": function ($event) { return _vm.onKeydown($event); }, "input": function ($event) { if ($event.target.composing) {
                         return;
-                    } _vm.$set(_vm.data, "location", $event.target.value); } } }), _c('b-icon-bullseye', { staticClass: "location", on: { "click": function ($event) { return _vm.getLocation(); } } }), _c('br')], 1), _vm._v(" "), _c('button', { staticClass: "btn-search", on: { "click": function ($event) { return _vm.addCity(); } } }, [_vm._v("Dodaj")]), _vm._v(" "), _c('b-row', _vm._l((_vm.data.forecast), function (forecast, index) { return _c('b-col', { key: index, attrs: { "lg": "4", "md": "12", "xl": "3" } }, [_c('CurrentWeather', { attrs: { "currentWeather": forecast } })], 1); }), 1)], 1); },
+                    } _vm.$set(_vm.data, "location", $event.target.value); } } }), _c('b-icon-bullseye', { staticClass: "location", on: { "click": function ($event) { return _vm.getClientLocation(); } } }), _c('br')], 1), _vm._v(" "), _c('button', { staticClass: "btn-search", on: { "click": function ($event) { return _vm.addCity(); } } }, [_vm._v("Dodaj")]), _vm._v(" "), _c('button', { staticClass: "btn-search", on: { "click": function ($event) { return _vm.saveCities(); } } }, [_vm._v("Zapisz układ")]), _vm._v(" "), _c('b-row', _vm._l((_vm.data.forecast), function (forecast, index) { return _c('b-col', { key: index, attrs: { "lg": "4", "md": "12", "xl": "3" } }, [_c('b-icon-x-circle', { on: { "click": function ($event) { return _vm.deleteCity(index); } } }), _vm._v(" "), _c('CurrentWeather', { attrs: { "currentWeather": forecast } })], 1); }), 1)], 1); },
     staticRenderFns: []
 });
 "use strict";
@@ -229,12 +357,10 @@ const vue_1 = __importDefault(require("vue"));
 const forecastDataservice_1 = require("../../services/forecastDataservice");
 const CurrentWeather_1 = __importDefault(require("../CurrentWeather"));
 const bootstrap_vue_1 = require("bootstrap-vue");
+const userDataService_1 = require("../../services/userDataService");
 exports.default = vue_1.default.extend({
     name: 'Forecast',
-    components: { CurrentWeather: CurrentWeather_1.default, BIcon: bootstrap_vue_1.BIcon, BIconBullseye: bootstrap_vue_1.BIconBullseye },
-    props: {
-        locationProp: String
-    },
+    components: { CurrentWeather: CurrentWeather_1.default, BIcon: bootstrap_vue_1.BIcon, BIconBullseye: bootstrap_vue_1.BIconBullseye, BIconXCircle: bootstrap_vue_1.BIconXCircle },
     data() {
         return {
             data: {
@@ -245,9 +371,16 @@ exports.default = vue_1.default.extend({
             }
         };
     },
+    created() {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getLocation();
+            yield this.getForecast();
+        });
+    },
     methods: {
         getForecast() {
             return __awaiter(this, void 0, void 0, function* () {
+                this.data.forecast.splice(0, this.data.forecast.length);
                 this.data.locationArray.forEach((value) => {
                     forecastDataservice_1.forecastService.getForecast(value).then((response) => {
                         var _a;
@@ -256,7 +389,6 @@ exports.default = vue_1.default.extend({
                         return response;
                     });
                 });
-                this.data.locationArray.splice(0, this.data.locationArray.length);
             });
         },
         addCity() {
@@ -266,30 +398,57 @@ exports.default = vue_1.default.extend({
                 this.data.location = '';
             });
         },
-        getLocation() {
+        getClientLocation() {
             return __awaiter(this, void 0, void 0, function* () {
                 navigator.geolocation.getCurrentPosition(position => {
                     this.data.location = (`${position.coords.latitude}, ${position.coords.longitude}`);
                 });
             });
         },
-        getCitiesFromProp(str) {
-            if (str != '') {
-                const arr = str.split(',');
-                arr.forEach((value) => {
-                    this.data.locationArray.push(value);
-                });
+        saveCities() {
+            if (localStorage.getItem('ukey')) {
+                const ukey = localStorage.getItem('ukey');
+                const cities = this.data.locationArray.toString();
+                if (ukey !== null && cities !== '') {
+                    userDataService_1.users.saveCities(cities, ukey);
+                    console.log(cities, ukey);
+                    alert('Zapisano poprawnie');
+                }
             }
+            else
+                alert('Musisz być zalogowany!');
+        },
+        deleteCity(index) {
+            console.log(index);
+            console.log(this.data.locationArray);
+            this.data.locationArray.splice(index, 1);
+            this.getForecast();
+        },
+        getLocation() {
+            return __awaiter(this, void 0, void 0, function* () {
+                if (localStorage.getItem('ukey')) {
+                    const ukey = localStorage.getItem('ukey');
+                    if (ukey != null) {
+                        yield userDataService_1.users.getProfile(ukey).then((response) => {
+                            if (response != undefined) {
+                                const str = response.profile.cities;
+                                if (str != '') {
+                                    const arr = str.split(',');
+                                    arr.forEach((value) => {
+                                        this.data.locationArray.push(value);
+                                    });
+                                }
+                            }
+                        });
+                    }
+                }
+            });
         },
         onKeydown(e) {
             if (e.key === 'Enter') {
                 this.getForecast();
             }
         }
-    },
-    beforeMount() {
-        this.getCitiesFromProp(this.locationProp);
-        this.getForecast();
     }
 });
 Object.assign(exports.default.options || exports.default, _options);
@@ -412,7 +571,7 @@ var _options = { _vueModuleId: 'data-v-722c75ae' };
 Object.assign(_options, { _scopeId: 'data-v-722c75ae' });
 Object.assign(_options, {
     _scopeId: "data-v-722c75ae",
-    render: function render() { var _vm = this; var _h = _vm.$createElement; var _c = _vm._self._c || _h; return _c('div', { attrs: { "id": "weather" } }, _vm._l((_vm.currentWeather), function (data) { return _c('div', { key: data.location.name, staticClass: "weather-wrap" }, [_c('div', { staticClass: "location-box" }, [_c('img', { staticClass: "icon", attrs: { "src": data.current.condition.icon } }), _vm._v(" "), _c('div', { staticClass: "location" }, [_vm._v(_vm._s(data.location.name) + "," + _vm._s(data.location.country) + " ")]), _vm._v(" "), _c('div', { staticClass: "date" }, [_vm._v(_vm._s(data.location.localtime))])]), _vm._v(" "), _c('div', { staticClass: "weather-box" }, [_c('div', { staticClass: "temp" }, [_vm._v(_vm._s(data.current.temp_c) + " °C")]), _vm._v(" "), _c('div', { staticClass: "conditions" }, [_vm._v(_vm._s(data.current.condition.text))])]), _vm._v(" "), _c('b-row', _vm._l((data.forecast), function (daily, index) { return _c('div', { key: index }, [_c('DailyForecast', { attrs: { "dayWeather": daily } }), _vm._v(" "), _c('div')], 1); }), 0)], 1); }), 0); },
+    render: function render() { var _vm = this; var _h = _vm.$createElement; var _c = _vm._self._c || _h; return _c('div', { attrs: { "id": "weather" } }, _vm._l((_vm.currentWeather), function (data) { return _c('div', { key: data.location.name, staticClass: "weather-wrap" }, [_c('div', { staticClass: "location-box" }, [_c('img', { staticClass: "icon", attrs: { "src": data.current.condition.icon } }), _vm._v(" "), _c('div', { staticClass: "location" }, [_vm._v(_vm._s(data.location.name) + "," + _vm._s(data.location.country) + " ")]), _vm._v(" "), _c('div', { staticClass: "date" }, [_vm._v(_vm._s(data.location.localtime))])]), _vm._v(" "), _c('div', { staticClass: "weather-box" }, [_c('div', { staticClass: "temp" }, [_vm._v(_vm._s(data.current.temp_c) + "°C")]), _vm._v(" "), _c('div', { staticClass: "conditions" }, [_vm._v(_vm._s(data.current.condition.text))])]), _vm._v(" "), _c('b-row', _vm._l((data.forecast), function (daily, index) { return _c('div', { key: index }, [_c('DailyForecast', { attrs: { "dayWeather": daily } }), _vm._v(" "), _c('div')], 1); }), 0)], 1); }), 0); },
     staticRenderFns: []
 });
 "use strict";
@@ -428,7 +587,7 @@ exports.default = vue_1.default.extend({
     props: ["currentWeather"]
 });
 Object.assign(exports.default.options || exports.default, _options);
-require("fuse-box-css")("default/seed/components/CurrentWeather/CurrentWeather.vue.css", "\n#weather[data-v-722c75ae]{\r\n    background-color:deepskyblue;\r\n    background-size: cover;\r\n    background-position: bottom;\r\n    transition: 0.4s;\r\n    padding: 20px;\n}\n.search-box[data-v-722c75ae]{\r\n    width: 100%;\r\n    margin-bottom: 30px;\n}\n.search-box .search-bar[data-v-722c75ae]{\r\n    display: block;\r\n    width: 100%;\r\n    padding: 15px;\r\n    color:black;\r\n    font-size: 20px;\r\n    appearance: none;\r\n    border: none;\r\n    outline: none;\r\n    background-color: rgba(255,255,255,0.5);\r\n    border-radius: 0px 16px 0px 16px;\n}\n.location-box[data-v-722c75ae]{\r\n    text-align: center;\n}\n.location-box .icon[data-v-722c75ae]{\r\n    padding: auto;\r\n    margin: auto;\n}\n.location-box .location[data-v-722c75ae]{\r\n    color:white;\r\n    font-size: 32px;\r\n    font-weight: 500;\r\n    text-align: center;\r\n    text-shadow: 1px 3px rgba(0,0,0,0.5);\n}\n.location-box .date[data-v-722c75ae]{\r\n    color:white;\r\n    font-size: 20px;\r\n    font-weight: 300;\r\n    text-align: center;\r\n    font-style: italic;\n}\n.weather-box[data-v-722c75ae]{\r\n    text-align: center;\n}\n.weather-box .temp[data-v-722c75ae]{\r\n    display: inline-block;\r\n    padding: 10px 25px;\r\n    color: white;\r\n    font-size: 75px;\r\n    font-weight: 900;\r\n    text-shadow: 3px 6px rgba(0,0,0,0.25);\r\n    background-color: rgba(255,255,255,0.25);\r\n    border-radius: 16px;\r\n    margin: 30px 0px;\r\n    box-shadow: 3px 6px rgba(0,0,0,0.25);\n}\n.weather-box .conditions[data-v-722c75ae]{\r\n    color:white;\r\n    font-size: 25px;\r\n    font-weight: 500;\r\n    text-align: center;\r\n    font-style: italic;\n}\r\n");
+require("fuse-box-css")("default/seed/components/CurrentWeather/CurrentWeather.vue.css", "\n#weather[data-v-722c75ae]{\r\n    background-color:deepskyblue;\r\n    background-size: cover;\r\n    background-position: bottom;\r\n    transition: 0.4s;\r\n    padding: 20px;\n}\n.search-box[data-v-722c75ae]{\r\n    width: 100%;\r\n    margin-bottom: 30px;\n}\n.search-box .search-bar[data-v-722c75ae]{\r\n    display: block;\r\n    width: 100%;\r\n    padding: 15px;\r\n    color:black;\r\n    font-size: 20px;\r\n    appearance: none;\r\n    border: none;\r\n    outline: none;\r\n    background-color: rgba(255,255,255,0.5);\r\n    border-radius: 0px 16px 0px 16px;\n}\n.location-box[data-v-722c75ae]{\r\n    text-align: center;\n}\n.location-box .icon[data-v-722c75ae]{\r\n    padding: auto;\r\n    margin: auto;\n}\n.location-box .location[data-v-722c75ae]{\r\n    color:white;\r\n    font-size: 28px;\r\n    font-weight: 400;\r\n    text-align: center;\r\n    text-shadow: 1px 3px rgba(0,0,0,0.5);\n}\n.location-box .date[data-v-722c75ae]{\r\n    color:white;\r\n    font-size: 20px;\r\n    font-weight: 300;\r\n    text-align: center;\r\n    font-style: italic;\n}\n.weather-box[data-v-722c75ae]{\r\n    text-align: center;\r\n    background-color: rgba(255,255,255,0.25);\r\n    border-radius: 16px;\r\n    margin: 30px;\r\n    padding: 15px;\r\n    box-shadow: 3px 6px rgba(0,0,0,0.25);\n}\n.weather-box .temp[data-v-722c75ae]{\r\n    display: inline-block;\r\n    padding: 10px 25px;\r\n    color: white;\r\n    font-size: 50px;\r\n    font-weight: 800;\r\n    text-shadow: 3px 6px rgba(0,0,0,0.25);\n}\n.weather-box .conditions[data-v-722c75ae]{\r\n    color:white;\r\n    font-size: 25px;\r\n    font-weight: 500;\r\n    text-align: center;\r\n    font-style: italic;\n}\r\n");
 var process = FuseBox.import('process');
 if (process.env.NODE_ENV !== "production") {
     var api = require('vue-hot-reload-api');
@@ -456,7 +615,7 @@ var _options = { _vueModuleId: 'data-v-566ea8e' };
 Object.assign(_options, { _scopeId: 'data-v-566ea8e' });
 Object.assign(_options, {
     _scopeId: "data-v-566ea8e",
-    render: function render() { var _vm = this; var _h = _vm.$createElement; var _c = _vm._self._c || _h; return _c('div', _vm._l((_vm.dayWeather), function (data) { return _c('div', { key: data.date }, [_c('img', { attrs: { "src": data.day.condition.icon } }), _c('br'), _vm._v("\r\nData: " + _vm._s(data.date) + " "), _c('br'), _vm._v("\r\nTemp: " + _vm._s(data.day.avgtemp_c) + " "), _c('br'), _vm._v("\r\nWilgotność: " + _vm._s(data.day.avghumidity) + " % "), _c('br'), _vm._v("\r\n" + _vm._s(data.day.daily_will_it_rain) + " % szansy na opady "), _c('br')]); }), 0); },
+    render: function render() { var _vm = this; var _h = _vm.$createElement; var _c = _vm._self._c || _h; return _c('div', [_c('b-row', _vm._l((_vm.dayWeather), function (data) { return _c('b-col', { key: data.date }, [_c('img', { attrs: { "src": data.day.condition.icon } }), _c('br'), _vm._v("\r\n" + _vm._s(data.date) + " "), _c('br'), _vm._v("\r\nTemp: " + _vm._s(data.day.avgtemp_c) + " "), _c('br'), _vm._v("\r\nWilgotność: " + _vm._s(data.day.avghumidity) + " % "), _c('br'), _vm._v("\r\n" + _vm._s(data.day.daily_will_it_rain) + " % szansy na opady "), _c('br')]); }), 1)], 1); },
     staticRenderFns: []
 });
 "use strict";
@@ -479,175 +638,6 @@ if (process.env.NODE_ENV !== "production") {
     }
 }
 //# sourceMappingURL=DailyForecast.vue.js.map
-});
-___scope___.file("seed/components/Logged/index.js", function(exports, require, module, __filename, __dirname){
-
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const Logged_vue_1 = __importDefault(require("./Logged.vue"));
-exports.default = Logged_vue_1.default;
-//# sourceMappingURL=index.js.map
-});
-___scope___.file("seed/components/Logged/Logged.vue", function(exports, require, module, __filename, __dirname){
-
-"use strict";
-var _options = { _vueModuleId: 'data-v-ac75d4ce' };
-Object.assign(_options, { _scopeId: 'data-v-ac75d4ce' });
-Object.assign(_options, {
-    _scopeId: "data-v-ac75d4ce",
-    render: function render() { var _vm = this; var _h = _vm.$createElement; var _c = _vm._self._c || _h; return _c('div', { attrs: { "id": "weather" } }, [_c('Forecast', { attrs: { "locationProp": _vm.data.location } })], 1); },
-    staticRenderFns: []
-});
-"use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try {
-            step(generator.next(value));
-        }
-        catch (e) {
-            reject(e);
-        } }
-        function rejected(value) { try {
-            step(generator["throw"](value));
-        }
-        catch (e) {
-            reject(e);
-        } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const vue_1 = __importDefault(require("vue"));
-const userDataService_1 = require("../../services/userDataService");
-const Forecast_1 = __importDefault(require("../Forecast"));
-exports.default = vue_1.default.extend({
-    name: 'Logged',
-    components: { Forecast: Forecast_1.default },
-    data() {
-        return {
-            data: {
-                location: ''
-            }
-        };
-    },
-    methods: {
-        getLocation() {
-            return __awaiter(this, void 0, void 0, function* () {
-                if (localStorage.getItem('access_token')) {
-                    const ukey = localStorage.getItem('access_token');
-                    if (ukey != null) {
-                        yield userDataService_1.users.getProfile(ukey).then((response) => {
-                            if (response != undefined) {
-                                this.data.location = response.profile.cities;
-                            }
-                        });
-                    }
-                }
-            });
-        }
-    },
-    created() {
-        this.getLocation();
-    }
-});
-Object.assign(exports.default.options || exports.default, _options);
-require("fuse-box-css")("default/seed/components/Logged/Logged.vue.css", "\n#weather[data-v-ac75d4ce]{\r\n    background-color:deepskyblue;\r\n    background-size: cover;\r\n    background-position: bottom;\r\n    transition: 0.4s;\r\n    padding: 20px;\n}\n.search-box[data-v-ac75d4ce]{\r\n    width: 80%;\r\n    margin-bottom: 30px;\n}\n.search-box .search-bar[data-v-ac75d4ce]{\r\n    display: inline-block;\r\n    width: 90%;\r\n    padding: 15px 15px 15px 0px;\r\n    color:black;\r\n    font-size: 20px;\r\n    appearance: none;\r\n    border: none;\r\n    outline: none;\r\n    background-color: rgba(255,255,255,0.5);\r\n    border-radius: 0px 0px 0px 16px;\n}\n.search-box .location[data-v-ac75d4ce]{\r\n    display: inline-block;\r\n    width: auto;\r\n    height: auto;\r\n    padding: auto;\r\n    color:black;\r\n    font-size: 40px;\r\n    appearance: none;\r\n    border: none;\r\n    outline: none;\r\n    background-color: rgba(255,255,255,0.5);\r\n     border-radius: 0px 0px 16px 0px;\n}\n.btn-search[data-v-ac75d4ce]{\r\n    display: inline-block;\r\n    padding: 10px;\r\n    color:black;\r\n    font-size: 20px;\r\n    appearance: none;\r\n    border: none;\r\n    outline: none;\r\n    background-color: rgba(255,255,255,0.75);\r\n    border-radius: 5px;\n}\n.btn-search[data-v-ac75d4ce]  :hover{\r\n    display: inline-block;\r\n    padding: 10px;\r\n    color:white;\r\n    font-size: 20px;\r\n    appearance: none;\r\n    border: none;\r\n    outline: none;\r\n    background-color: rgba(43, 36, 36, 0.75);\r\n    border-radius: 5px;\n}\r\n");
-var process = FuseBox.import('process');
-if (process.env.NODE_ENV !== "production") {
-    var api = require('vue-hot-reload-api');
-    if (api && !api.isRecorded('data-v-ac75d4ce')) {
-        api.createRecord('data-v-ac75d4ce', module.exports.default);
-    }
-}
-//# sourceMappingURL=Logged.vue.js.map
-});
-___scope___.file("seed/services/userDataService.js", function(exports, require, module, __filename, __dirname){
-
-"use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.users = void 0;
-const base = {
-    address: 'http://localhost:3000',
-    query(domain, query, variables) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const res = yield fetch(`${this.address}/${domain}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ query, variables })
-            });
-            if (res.status === 404) {
-                throw Error(yield res.text());
-            }
-            const json = yield res.json();
-            if (json.errors) {
-                throw Error(json.errors[0].message);
-            }
-            return json.data;
-        });
-    }
-};
-exports.users = {
-    register(email, password, confirmation) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield base.query('user', `
-    mutation{
-      register(email: "${email}",
-         password:"${password}",
-         confirmation:"${confirmation}"){
-          ukey,
-          confirm_token
-      }
-    }
-    `);
-        });
-    },
-    login(email, password) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const user = yield base.query('user', `
-    mutation{
-      login(email:"${email}", password:"${password}"){
-       ukey,
-       access_token
-     }
-   }
-    `);
-            return user;
-        });
-    },
-    getProfile(ukey) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (ukey != null) {
-                const profile = yield base.query('user', `query{
-      profile(ukey: "${ukey}"){
-        ukey
-        cities
-      }
-    }`);
-                return profile;
-            }
-        });
-    }
-};
-//# sourceMappingURL=userDataService.js.map
 });
 ___scope___.file("seed/components/Login/index.js", function(exports, require, module, __filename, __dirname){
 
@@ -713,8 +703,8 @@ exports.default = vue_1.default.extend({
             return __awaiter(this, void 0, void 0, function* () {
                 try {
                     yield userDataService_1.users.login(email, password).then((response) => {
-                        localStorage.setItem('access_token', response.login.ukey);
-                        this.$router.push('/logged');
+                        localStorage.setItem('ukey', response.login.ukey);
+                        this.$router.push({ name: 'forecast' });
                         location.reload();
                         return response;
                     });
@@ -37444,4 +37434,4 @@ FuseBox.import("default/seed/index.js");
 FuseBox.main("default/seed/index.js");
 })
 (function(e){function r(e){var r=e.charCodeAt(0),n=e.charCodeAt(1);if((m||58!==n)&&(r>=97&&r<=122||64===r)){if(64===r){var t=e.split("/"),i=t.splice(2,t.length).join("/");return[t[0]+"/"+t[1],i||void 0]}var o=e.indexOf("/");if(o===-1)return[e];var a=e.substring(0,o),f=e.substring(o+1);return[a,f]}}function n(e){return e.substring(0,e.lastIndexOf("/"))||"./"}function t(){for(var e=[],r=0;r<arguments.length;r++)e[r]=arguments[r];for(var n=[],t=0,i=arguments.length;t<i;t++)n=n.concat(arguments[t].split("/"));for(var o=[],t=0,i=n.length;t<i;t++){var a=n[t];a&&"."!==a&&(".."===a?o.pop():o.push(a))}return""===n[0]&&o.unshift(""),o.join("/")||(o.length?"/":".")}function i(e){var r=e.match(/\.(\w{1,})$/);return r&&r[1]?e:e+".js"}function o(e){if(m){var r,n=document,t=n.getElementsByTagName("head")[0];/\.css$/.test(e)?(r=n.createElement("link"),r.rel="stylesheet",r.type="text/css",r.href=e):(r=n.createElement("script"),r.type="text/javascript",r.src=e,r.async=!0),t.insertBefore(r,t.firstChild)}}function a(e,r){for(var n in e)e.hasOwnProperty(n)&&r(n,e[n])}function f(e){return{server:require(e)}}function u(e,n){var o=n.path||"./",a=n.pkg||"default",u=r(e);if(u&&(o="./",a=u[0],n.v&&n.v[a]&&(a=a+"@"+n.v[a]),e=u[1]),e)if(126===e.charCodeAt(0))e=e.slice(2,e.length),o="./";else if(!m&&(47===e.charCodeAt(0)||58===e.charCodeAt(1)))return f(e);var s=x[a];if(!s){if(m&&"electron"!==_.target)throw"Package not found "+a;return f(a+(e?"/"+e:""))}e=e?e:"./"+s.s.entry;var l,d=t(o,e),c=i(d),p=s.f[c];return!p&&c.indexOf("*")>-1&&(l=c),p||l||(c=t(d,"/","index.js"),p=s.f[c],p||"."!==d||(c=s.s&&s.s.entry||"index.js",p=s.f[c]),p||(c=d+".js",p=s.f[c]),p||(p=s.f[d+".jsx"]),p||(c=d+"/index.jsx",p=s.f[c])),{file:p,wildcard:l,pkgName:a,versions:s.v,filePath:d,validPath:c}}function s(e,r,n){if(void 0===n&&(n={}),!m)return r(/\.(js|json)$/.test(e)?h.require(e):"");if(n&&n.ajaxed===e)return console.error(e,"does not provide a module");var i=new XMLHttpRequest;i.onreadystatechange=function(){if(4==i.readyState)if(200==i.status){var n=i.getResponseHeader("Content-Type"),o=i.responseText;/json/.test(n)?o="module.exports = "+o:/javascript/.test(n)||(o="module.exports = "+JSON.stringify(o));var a=t("./",e);_.dynamic(a,o),r(_.import(e,{ajaxed:e}))}else console.error(e,"not found on request"),r(void 0)},i.open("GET",e,!0),i.send()}function l(e,r){var n=y[e];if(n)for(var t in n){var i=n[t].apply(null,r);if(i===!1)return!1}}function d(e){if(null!==e&&["function","object","array"].indexOf(typeof e)!==-1&&!e.hasOwnProperty("default"))return Object.isFrozen(e)?void(e.default=e):void Object.defineProperty(e,"default",{value:e,writable:!0,enumerable:!1})}function c(e,r){if(void 0===r&&(r={}),58===e.charCodeAt(4)||58===e.charCodeAt(5))return o(e);var t=u(e,r);if(t.server)return t.server;var i=t.file;if(t.wildcard){var a=new RegExp(t.wildcard.replace(/\*/g,"@").replace(/[.?*+^$[\]\\(){}|-]/g,"\\$&").replace(/@@/g,".*").replace(/@/g,"[a-z0-9$_-]+"),"i"),f=x[t.pkgName];if(f){var p={};for(var v in f.f)a.test(v)&&(p[v]=c(t.pkgName+"/"+v));return p}}if(!i){var g="function"==typeof r,y=l("async",[e,r]);if(y===!1)return;return s(e,function(e){return g?r(e):null},r)}var w=t.pkgName;if(i.locals&&i.locals.module)return i.locals.module.exports;var b=i.locals={},j=n(t.validPath);b.exports={},b.module={exports:b.exports},b.require=function(e,r){var n=c(e,{pkg:w,path:j,v:t.versions});return _.sdep&&d(n),n},m||!h.require.main?b.require.main={filename:"./",paths:[]}:b.require.main=h.require.main;var k=[b.module.exports,b.require,b.module,t.validPath,j,w];return l("before-import",k),i.fn.apply(k[0],k),l("after-import",k),b.module.exports}if(e.FuseBox)return e.FuseBox;var p="undefined"!=typeof ServiceWorkerGlobalScope,v="undefined"!=typeof WorkerGlobalScope,m="undefined"!=typeof window&&"undefined"!=typeof window.navigator||v||p,h=m?v||p?{}:window:global;m&&(h.global=v||p?{}:window),e=m&&"undefined"==typeof __fbx__dnm__?e:module.exports;var g=m?v||p?{}:window.__fsbx__=window.__fsbx__||{}:h.$fsbx=h.$fsbx||{};m||(h.require=require);var x=g.p=g.p||{},y=g.e=g.e||{},_=function(){function r(){}return r.global=function(e,r){return void 0===r?h[e]:void(h[e]=r)},r.import=function(e,r){return c(e,r)},r.on=function(e,r){y[e]=y[e]||[],y[e].push(r)},r.exists=function(e){try{var r=u(e,{});return void 0!==r.file}catch(e){return!1}},r.remove=function(e){var r=u(e,{}),n=x[r.pkgName];n&&n.f[r.validPath]&&delete n.f[r.validPath]},r.main=function(e){return this.mainFile=e,r.import(e,{})},r.expose=function(r){var n=function(n){var t=r[n].alias,i=c(r[n].pkg);"*"===t?a(i,function(r,n){return e[r]=n}):"object"==typeof t?a(t,function(r,n){return e[n]=i[r]}):e[t]=i};for(var t in r)n(t)},r.dynamic=function(r,n,t){this.pkg(t&&t.pkg||"default",{},function(t){t.file(r,function(r,t,i,o,a){var f=new Function("__fbx__dnm__","exports","require","module","__filename","__dirname","__root__",n);f(!0,r,t,i,o,a,e)})})},r.flush=function(e){var r=x.default;for(var n in r.f)e&&!e(n)||delete r.f[n].locals},r.pkg=function(e,r,n){if(x[e])return n(x[e].s);var t=x[e]={};return t.f={},t.v=r,t.s={file:function(e,r){return t.f[e]={fn:r}}},n(t.s)},r.addPlugin=function(e){this.plugins.push(e)},r.packages=x,r.isBrowser=m,r.isServer=!m,r.plugins=[],r}();return m||(h.FuseBox=_),e.FuseBox=_}(this))
-//# sourceMappingURL=app.js.map?tm=1627390218929
+//# sourceMappingURL=app.js.map?tm=1627562525907

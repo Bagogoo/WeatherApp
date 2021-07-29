@@ -7,3 +7,6 @@ export interface User {
   password: string;
   confirmed: boolean;
 }
+export interface Validate {
+  expires: number;
+}

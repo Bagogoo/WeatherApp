@@ -1,7 +1,8 @@
 import Vue from 'vue';
 import { Forecast, forecastService } from '../../services/forecastDataservice';
 import CurrentWeather from '../CurrentWeather';
-import { BIcon, BIconBullseye } from 'bootstrap-vue';
+import { BIcon, BIconBullseye, BIconXCircle } from 'bootstrap-vue';
+import { users } from '../../services/userDataService';
 
 
 interface Data {
@@ -9,29 +10,30 @@ interface Data {
         forecast: Forecast[],
         locationArray: Array<string>,
         dataLoaded: boolean,
-        location:string
+        location: string
     }
 }
 
 export default Vue.extend({
     name: 'Forecast',
-    components: { CurrentWeather, BIcon, BIconBullseye },
-    props: {
-        locationProp: String
-    },
+    components: { CurrentWeather, BIcon, BIconBullseye, BIconXCircle },
     data(): Data {
         return {
             data: {
                 forecast: [],
-                locationArray:[],
+                locationArray: [],
                 dataLoaded: false,
-                location:''
+                location: ''
             }
         }
     },
+    async created() {
+        await this.getLocation();
+        await this.getForecast();
+    },
     methods: {
-            
         async getForecast() {
+            this.data.forecast.splice(0, this.data.forecast.length);
             this.data.locationArray.forEach((value) => {
                 forecastService.getForecast(value).then((response) => {
                     this.data.forecast?.push(response);
@@ -39,26 +41,54 @@ export default Vue.extend({
                     return response;
                 });
             })
-            this.data.locationArray.splice(0, this.data.locationArray.length);
+
         },
         async addCity() {
             this.data.locationArray.push(this.data.location);
             this.getForecast();
             this.data.location = '';
-         },
-        async getLocation() {
+        },
+        async getClientLocation() {
             navigator.geolocation.getCurrentPosition(
                 position => {
-                    this.data.location=( `${position.coords.latitude}, ${position.coords.longitude}`);
+                    this.data.location = (`${position.coords.latitude}, ${position.coords.longitude}`);
                 }
             )
         },
-        getCitiesFromProp(str: string) {
-            if (str != '') {
-                const arr: Array<string> = str.split(',');
-                arr.forEach((value) => {
-                    this.data.locationArray.push(value);
-                })
+        saveCities() {
+            if (localStorage.getItem('ukey')) {
+                const ukey = localStorage.getItem('ukey');
+                const cities = this.data.locationArray.toString();
+                if (ukey !== null && cities !== '') {
+                    users.saveCities(cities, ukey);
+                    console.log(cities, ukey);
+                    alert('Zapisano poprawnie');
+                }
+            }
+            else alert('Musisz być zalogowany!');
+        },
+        deleteCity(index: number) {
+            console.log(index);
+            console.log(this.data.locationArray);
+            this.data.locationArray.splice(index, 1);
+            this.getForecast();
+        },
+        async getLocation() {
+            if (localStorage.getItem('ukey')) {
+                const ukey = localStorage.getItem('ukey');
+                if (ukey != null) {
+                    await users.getProfile(ukey).then((response) => {
+                        if (response != undefined) {
+                            const str = response.profile.cities;
+                            if (str != '') {
+                                const arr: Array<string> = str.split(',');
+                                arr.forEach((value) => {
+                                    this.data.locationArray.push(value);
+                                })
+                            }
+                        }
+                    });
+                }
             }
         },
         onKeydown(e: KeyboardEvent) {
@@ -66,9 +96,5 @@ export default Vue.extend({
                 this.getForecast();
             }
         }
-    },
-    beforeMount() {
-        this.getCitiesFromProp(this.locationProp);
-        this.getForecast();
     }
 });

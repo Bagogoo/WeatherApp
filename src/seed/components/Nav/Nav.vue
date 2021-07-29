@@ -1,7 +1,7 @@
 <template>
     <div>
     <div>
-    <b-nav tabs fill v-if="!this.isloggedIn()">
+    <b-nav tabs fill v-if="!data.isValid">
         <b-nav-item href="/">Home</b-nav-item>
         <b-nav-item href="/#/login">Logowanie</b-nav-item>
         <b-nav-item href="/#/register">Rejestracja</b-nav-item>

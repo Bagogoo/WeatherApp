@@ -8,7 +8,7 @@
         
       </div>
       <div class="weather-box">
-      <div class="temp">{{data.current.temp_c}} &deg;C</div>
+      <div class="temp">{{data.current.temp_c}}&deg;C</div>
       <div class="conditions">{{data.current.condition.text}}</div>
       </div>
        <b-row>
@@ -54,8 +54,8 @@
   }
   .location-box .location{
     color:white;
-    font-size: 32px;
-    font-weight: 500;
+    font-size: 28px;
+    font-weight: 400;
     text-align: center;
     text-shadow: 1px 3px rgba(0,0,0,0.5);
   }
@@ -68,18 +68,20 @@
   }
   .weather-box{
     text-align: center;
+    background-color: rgba(255,255,255,0.25);
+    border-radius: 16px;
+    margin: 30px;
+    padding: 15px;
+    box-shadow: 3px 6px rgba(0,0,0,0.25);
   }
   .weather-box .temp{
     display: inline-block;
     padding: 10px 25px;
     color: white;
-    font-size: 75px;
-    font-weight: 900;
+    font-size: 50px;
+    font-weight: 800;
     text-shadow: 3px 6px rgba(0,0,0,0.25);
-    background-color: rgba(255,255,255,0.25);
-    border-radius: 16px;
-    margin: 30px 0px;
-    box-shadow: 3px 6px rgba(0,0,0,0.25);;
+   
   }
   .weather-box .conditions{
     color:white;

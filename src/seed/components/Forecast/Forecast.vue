@@ -1,11 +1,12 @@
 <template>
     <div id="weather">
       <b-row class="search-box ">
-    <input class="search-bar" placeholder="Szukaj" v-model="data.location" required  @keydown="onKeydown($event)" /><b-icon-bullseye class="location" @click="getLocation()"></b-icon-bullseye><br>
+    <input class="search-bar" placeholder="Szukaj" v-model="data.location" required  @keydown="onKeydown($event)" /><b-icon-bullseye class="location" @click="getClientLocation()"></b-icon-bullseye><br>
       </b-row>
-     <button class="btn-search" @click="addCity()">Dodaj</button>
+     <button class="btn-search" @click="addCity()">Dodaj</button>   <button class="btn-search" @click="saveCities()">Zapisz układ</button>
     <b-row>
      <b-col  lg="4" md="12" xl="3" v-for="(forecast, index) in data.forecast" v-bind:key="index">
+    <b-icon-x-circle @click="deleteCity(index)"></b-icon-x-circle>
     <CurrentWeather :currentWeather="forecast"/>  
     </b-col>
     </b-row>

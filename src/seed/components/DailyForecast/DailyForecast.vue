@@ -1,14 +1,14 @@
 <template>
 <div>
-  
-<div v-for="data in dayWeather" :key='data.date'>
+  <b-row>
+<b-col v-for="data in dayWeather" :key='data.date'>
 <img  v-bind:src="data.day.condition.icon"><br>
-Data: {{data.date}} <br>
+{{data.date}} <br>
 Temp: {{data.day.avgtemp_c}} <br>
 Wilgotność: {{data.day.avghumidity}} % <br>
 {{data.day.daily_will_it_rain}} % szansy na opady <br>
-</div>
-  
+</b-col>
+</b-row>
 </div>
 </template>
 

@@ -88,6 +88,7 @@ exports.default = {
                 ukey: uuid_1.v4()
             };
             const [row] = await this.query('INSERT INTO users (ukey, email, password) VALUES ($1, $2, $3) RETURNING  ukey, email, password', [user.ukey, user.email, user.password]);
+            await db_1.pool.query("INSERT INTO sessions (ukey, expires) values ($1,(NOW()+ interval '3 hour'))", [user.ukey]);
             const result = {
                 data: {
                     ukey: row.ukey,
@@ -128,12 +129,29 @@ exports.default = {
                     status: 200
                 };
                 context.res.status(200);
+                await db_1.pool.query("UPDATE sessions SET expires=(NOW()+ interval '3 hour') where ukey = $1", [user.ukey]);
                 return result.data;
             }
             else {
                 context.res.status(400);
                 throw new Error("Hasło nieprawidłowe");
             }
+        },
+        async validate({ ukey }) {
+            const now = Date.now();
+            const [row] = (await db_1.pool.query("SELECT expires FROM sessions WHERE ukey = $1", [ukey])).rows;
+            if (row === undefined || now > row.expires) {
+                return false;
+            }
+            else
+                return true;
+        },
+        async saveCities({ ukey, cities }) {
+            const success = await this.query("UPDATE Users SET cities=$1 where ukey = $2", [cities, ukey]);
+            if (!success) {
+                throw Error("Wystąpił błąd");
+            }
+            return true;
         },
         async profile(ukey, context) {
             const user = await this.getUserByKey(ukey);
@@ -170,7 +188,7 @@ exports.pool = new pg_1.Pool({
 });
 ___scope___.file("node-test/graphql/user.gql", function(exports, require, module, __filename, __dirname){
 
-module.exports = "type RegisteredUser{\r\n  ukey: ID,\r\n  confirm_token: ID\r\n}\r\ntype AccessToken{\r\n  ukey: ID,\r\n  access_token: ID\r\n}\r\ntype Profile{\r\n  ukey: ID,\r\n  email:String,\r\n  cities: String\r\n}\r\ntype Query{\r\n  profile(ukey: String!) : Profile\r\n}\r\ntype Mutation{\r\n  register(email: String!, password: String!, confirmation: String!):RegisteredUser\r\n  login(email: String!, password: String!) : AccessToken\r\n  confirm(email: String!): Boolean\r\n  refresh: AccessToken\r\n}"
+module.exports = "type RegisteredUser {\r\n  ukey: ID\r\n  confirm_token: ID\r\n}\r\ntype AccessToken {\r\n  ukey: ID\r\n  access_token: ID\r\n}\r\ntype Profile {\r\n  ukey: ID\r\n  email: String\r\n  cities: String\r\n}\r\ntype Query {\r\n  profile(ukey: String!): Profile\r\n  validate(ukey: String!): Boolean\r\n}\r\ntype Mutation {\r\n  register(\r\n    email: String!\r\n    password: String!\r\n    confirmation: String!\r\n  ): RegisteredUser\r\n  login(email: String!, password: String!): AccessToken\r\n  confirm(email: String!): Boolean\r\n  refresh: AccessToken\r\n  saveCities(cities: String!, ukey: String!): Boolean\r\n}\r\n"
 });
 ___scope___.file("node-test/routes/forecast.js", function(exports, require, module, __filename, __dirname){
 

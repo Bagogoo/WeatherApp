@@ -24,10 +24,10 @@ export default Vue.extend({
         async login(email: string, password: string) {
             try {
                 await users.login(email, password).then((response) => {
-                    localStorage.setItem('access_token', response.login.ukey);
-                    this.$router.push('/logged');
+                    localStorage.setItem('ukey', response.login.ukey);
+                    this.$router.push({ name: 'forecast' });
                     location.reload();
-                    
+
                     return response;
                 });
 
@@ -35,7 +35,7 @@ export default Vue.extend({
             catch (error) {
                 this.data.error = error;
             }
-           
+
         }
     }
 });

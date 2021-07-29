@@ -14,14 +14,7 @@ new Vue({
             {
                 path: '/',
                 name: 'forecast',
-                props: true ,
                 component: () => import('./components/Forecast')
-            },
-            {
-                path: '/logged',
-                name: 'logged',
-                props: true ,
-                component: () => import('./components/Logged')
             },
             {
                 path: '/login',

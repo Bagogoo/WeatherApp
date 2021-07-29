@@ -1,4 +1,6 @@
+import { getDirectiveValues, validate } from "graphql";
 import { getParsedCommandLineOfConfigFile } from "typescript";
+import { Validate } from "../../node-test/models/user";
 
 interface GraphQLError {
   message: string;
@@ -16,9 +18,12 @@ export interface User {
 
 export interface LoginResponse {
   login: {
-      access_token: string;
-      ukey: string;
+    access_token: string;
+    ukey: string;
   }
+}
+export interface Validation {
+  validate: Boolean
 }
 export interface Profile {
   profile: {
@@ -83,8 +88,23 @@ export const users = {
      }
    }
     `);
-    
+
     return user;
+  },
+  async validate(ukey: string | null) {
+    if (ukey !== null) {
+      const isValid = await base.query<Validation>('user', `query{
+      validate(ukey: "${ukey}")}`);
+      return isValid.validate;
+    }
+    else return false;
+  },
+  async saveCities(cities: string, ukey: string) {
+    if (cities != null && ukey != null) {
+      return await base.query('user', `mutation{
+        saveCities(cities:"${cities}", ukey:"${ukey}")
+      }`);
+    }
   },
   async getProfile(ukey: string) {
     if (ukey != null) {
