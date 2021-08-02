@@ -5,7 +5,7 @@ export interface User {
   refreshIndex: string;
   cities: string;
   password: string;
-  confirmed: boolean;
+  confirm: boolean;
 }
 export interface Validate {
   expires: number;

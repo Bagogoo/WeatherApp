@@ -25,6 +25,12 @@ new Vue({
                 path: '/register',
                 name: 'Register',                
                 component: () => import('./components/Register')
+            },
+            {
+                path: '/confirm/:email',
+                name: 'Confirm',
+                props: true,
+                component: () => import('./components/Confirm')
             }
             
         ]

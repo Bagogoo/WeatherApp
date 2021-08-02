@@ -6,7 +6,7 @@
      <button class="btn-search" @click="addCity()">Dodaj</button>   <button class="btn-search" @click="saveCities()">Zapisz układ</button>
     <b-row>
      <b-col  lg="4" md="12" xl="3" v-for="(forecast, index) in data.forecast" v-bind:key="index">
-    <b-icon-x-circle @click="deleteCity(index)"></b-icon-x-circle>
+    <b-icon-x-circle class="icon-x" @click="deleteCity(index)"></b-icon-x-circle>
     <CurrentWeather :currentWeather="forecast"/>  
     </b-col>
     </b-row>
@@ -22,6 +22,11 @@
     transition: 0.4s;
     padding: 20px;
     text-align: center;
+  }
+  .icon-x{
+    position:relative;
+    left: 80px;
+    top: 60px;
   }
   .search-box{
     margin: auto;

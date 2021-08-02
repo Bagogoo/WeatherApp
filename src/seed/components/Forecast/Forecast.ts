@@ -33,14 +33,19 @@ export default Vue.extend({
     },
     methods: {
         async getForecast() {
-            this.data.forecast.splice(0, this.data.forecast.length);
-            this.data.locationArray.forEach((value) => {
-                forecastService.getForecast(value).then((response) => {
-                    this.data.forecast?.push(response);
-                    this.data.dataLoaded = true;
-                    return response;
-                });
-            })
+            try {
+                this.data.forecast.splice(0, this.data.forecast.length);
+                this.data.locationArray.forEach((value) => {
+                    forecastService.getForecast(value).then((response) => {
+                        this.data.forecast?.push(response);
+                        this.data.dataLoaded = true;
+                        return response;
+                    });
+                })
+            }  
+            catch (error) {
+                alert(error);
+            }
 
         },
         async addCity() {
@@ -61,15 +66,12 @@ export default Vue.extend({
                 const cities = this.data.locationArray.toString();
                 if (ukey !== null && cities !== '') {
                     users.saveCities(cities, ukey);
-                    console.log(cities, ukey);
                     alert('Zapisano poprawnie');
                 }
             }
             else alert('Musisz być zalogowany!');
         },
         deleteCity(index: number) {
-            console.log(index);
-            console.log(this.data.locationArray);
             this.data.locationArray.splice(index, 1);
             this.getForecast();
         },
@@ -93,7 +95,7 @@ export default Vue.extend({
         },
         onKeydown(e: KeyboardEvent) {
             if (e.key === 'Enter') {
-                this.getForecast();
+                this.addCity();
             }
         }
     }

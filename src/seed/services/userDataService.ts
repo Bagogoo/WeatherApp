@@ -23,7 +23,10 @@ export interface LoginResponse {
   }
 }
 export interface Validation {
-  validate: Boolean
+  validate: boolean
+}
+export interface Confirmation {
+  confirm: boolean
 }
 export interface Profile {
   profile: {
@@ -88,14 +91,22 @@ export const users = {
      }
    }
     `);
-
-    return user;
+  return user;
   },
   async validate(ukey: string | null) {
     if (ukey !== null) {
       const isValid = await base.query<Validation>('user', `query{
       validate(ukey: "${ukey}")}`);
       return isValid.validate;
+    }
+    else return false;
+  },
+  async confirm(email: string) {
+    if (email !== null) {
+      const isConfirm = await base.query<Confirmation>('user', `mutation{
+        confirm(email:"${email}")
+      }`);
+      return isConfirm.confirm;
     }
     else return false;
   },

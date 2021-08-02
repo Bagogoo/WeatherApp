@@ -19,12 +19,10 @@ export default Vue.extend({
         this.isloggedIn();
     },
     methods: {
-         async isloggedIn() {
-            await users.validate(localStorage.getItem('ukey')).then(response => {
-                this.data.isValid = response;
-                return response;
-            });
-             
+        async isloggedIn() {
+            if (localStorage.getItem('ukey')) {
+                this.data.isValid = true;
+            }
         },
         logout() {
             localStorage.removeItem('ukey');

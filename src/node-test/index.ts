@@ -4,6 +4,7 @@ import { graphqlHTTP } from 'express-graphql';
 import cookieParser from 'cookie-parser';
 
 import { forecast, users} from './routes';
+import { sendEmail } from './utils/sendMail';
 
 const app: Application = express();
 

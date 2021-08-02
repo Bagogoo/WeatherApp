@@ -63,6 +63,7 @@ const graphql_1 = require("graphql");
 const db_1 = require("../db");
 const bcryptjs_1 = require("bcryptjs");
 const uuid_1 = require("uuid");
+const sendMail_1 = require("../utils/sendMail");
 exports.default = {
     rootValue: {
         async getUserByKey({ ukey }) {
@@ -89,6 +90,7 @@ exports.default = {
             };
             const [row] = await this.query('INSERT INTO users (ukey, email, password) VALUES ($1, $2, $3) RETURNING  ukey, email, password', [user.ukey, user.email, user.password]);
             await db_1.pool.query("INSERT INTO sessions (ukey, expires) values ($1,(NOW()+ interval '3 hour'))", [user.ukey]);
+            await sendMail_1.sendEmail(user.email, "http://localhost:8080/#/confirm/" + user.email);
             const result = {
                 data: {
                     ukey: row.ukey,
@@ -102,7 +104,7 @@ exports.default = {
             if (user === undefined) {
                 throw new Error("Użytkownik nie istnieje");
             }
-            if (user.confirmed === true) {
+            if (user.confirm === true) {
                 throw Error("Użytkownik już potwierdzony");
             }
             const success = await this.query("UPDATE Users SET confirm=true where email = $1", [email]);
@@ -117,19 +119,19 @@ exports.default = {
                 context.res.status(400);
                 throw new Error("Użytkownik nie istnieje");
             }
-            if (user.confirmed === false) {
+            if (user.confirm === false) {
                 context.res.status(400);
                 throw new Error("Użytkownik niepotwierdzony");
             }
             const valid = await bcryptjs_1.compare(password, user.password);
             if (valid) {
+                await db_1.pool.query("UPDATE sessions SET expires=(NOW()+ interval '3 hour') where ukey = $1", [user.ukey]);
                 const accessToken = `accesss-token-${user.ukey}`;
                 const result = {
                     data: { ukey: user.ukey, access_token: accessToken },
                     status: 200
                 };
                 context.res.status(200);
-                await db_1.pool.query("UPDATE sessions SET expires=(NOW()+ interval '3 hour') where ukey = $1", [user.ukey]);
                 return result.data;
             }
             else {
@@ -137,11 +139,12 @@ exports.default = {
                 throw new Error("Hasło nieprawidłowe");
             }
         },
-        async validate({ ukey }) {
+        async validate({ ukey }, context) {
             const now = Date.now();
             const [row] = (await db_1.pool.query("SELECT expires FROM sessions WHERE ukey = $1", [ukey])).rows;
             if (row === undefined || now > row.expires) {
-                return false;
+                context.res.status(400);
+                throw new Error("Sesja wygasła");
             }
             else
                 return true;
@@ -149,7 +152,7 @@ exports.default = {
         async saveCities({ ukey, cities }) {
             const success = await this.query("UPDATE Users SET cities=$1 where ukey = $2", [cities, ukey]);
             if (!success) {
-                throw Error("Wystąpił błąd");
+                throw Error("Wystąpił błąd podczas zapisywania");
             }
             return true;
         },
@@ -184,6 +187,38 @@ exports.pool = new pg_1.Pool({
     password: 'admin',
     idleTimeoutMillis: 30000
 });
+
+});
+___scope___.file("node-test/utils/sendMail.js", function(exports, require, module, __filename, __dirname){
+
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.sendEmail = void 0;
+const nodemailer_1 = __importDefault(require("nodemailer"));
+async function sendEmail(email, url) {
+    const testAccount = await nodemailer_1.default.createTestAccount();
+    const transporter = nodemailer_1.default.createTransport({
+        host: "smtp-relay.sendinblue.com",
+        port: 587,
+        secure: false,
+        auth: {
+            user: 'michalmonka97@gmail.com',
+            pass: 'jq2OTDICNa6nz0QM',
+        },
+    });
+    const info = await transporter.sendMail({
+        from: '"Porownywarka pogody" <bok@porownywarka.pl>',
+        to: email,
+        subject: "Potwierdz rejestracje",
+        text: "Witaj, kliknij w link aby potwierdzic rejestracje.",
+        html: `<a href="${url}">${url}</a>`,
+    });
+    console.log("Message sent: %s", info.messageId);
+}
+exports.sendEmail = sendEmail;
 
 });
 ___scope___.file("node-test/graphql/user.gql", function(exports, require, module, __filename, __dirname){

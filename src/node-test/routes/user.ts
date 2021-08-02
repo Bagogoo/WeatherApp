@@ -5,6 +5,7 @@ import { Result } from "../models/result";
 import { hash, compare } from "bcryptjs";
 import { UserForCreation } from "../models/userForCreation";
 import { v4 as uuidv4 } from "uuid";
+import { sendEmail } from "../utils/sendMail";
 export default {
   rootValue: {
     async getUserByKey({ ukey }: { ukey: string }): Promise<User | undefined> {
@@ -37,6 +38,7 @@ export default {
       };
       const [row] = await this.query<User>('INSERT INTO users (ukey, email, password) VALUES ($1, $2, $3) RETURNING  ukey, email, password', [user.ukey, user.email, user.password]);
       await pool.query("INSERT INTO sessions (ukey, expires) values ($1,(NOW()+ interval '3 hour'))", [user.ukey])
+      await sendEmail(user.email, "http://localhost:8080/#/confirm/"+user.email);
       const result: Result<any> = {
         data: {
           ukey: row.ukey,
@@ -51,7 +53,7 @@ export default {
       if (user === undefined) {
         throw new Error("Użytkownik nie istnieje");
       }
-      if (user.confirmed === true) {
+      if (user.confirm === true) {
         throw Error("Użytkownik już potwierdzony");
       }
       const success = await this.query<User>("UPDATE Users SET confirm=true where email = $1", [email]);
@@ -69,12 +71,13 @@ export default {
         context.res.status(400);
         throw new Error("Użytkownik nie istnieje");
       }
-      if (user.confirmed === false) {
+      if (user.confirm === false) {
         context.res.status(400);
         throw new Error("Użytkownik niepotwierdzony");
       }
       const valid = await compare(password, user.password);
       if (valid) {
+        await pool.query("UPDATE sessions SET expires=(NOW()+ interval '3 hour') where ukey = $1", [user.ukey])
         const accessToken = `accesss-token-${user.ukey}`;
         const result: Result<any> = {
           data:
@@ -82,7 +85,7 @@ export default {
           status: 200
         }
         context.res.status(200);
-        await pool.query("UPDATE sessions SET expires=(NOW()+ interval '3 hour') where ukey = $1", [user.ukey])
+       
         return result.data;
       }
       else {
@@ -90,19 +93,20 @@ export default {
         throw new Error("Hasło nieprawidłowe");
       }
     },
-    async validate({ ukey }: { ukey: string }){
+    async validate({ ukey }: { ukey: string }, context: any){
       const now = Date.now();
       const [row] =(
         await pool.query<Validate>("SELECT expires FROM sessions WHERE ukey = $1", [ukey])
       ).rows;
       if (row === undefined || now > row.expires) {
-        return false
+        context.res.status(400);
+        throw new Error("Sesja wygasła");
       } else return true;
     },
     async saveCities({ukey, cities }: {ukey:string, cities:string}) {
       const success = await this.query("UPDATE Users SET cities=$1 where ukey = $2", [cities, ukey]);
       if (!success) {
-        throw Error("Wystąpił błąd");
+        throw Error("Wystąpił błąd podczas zapisywania");
       }
       return true;
     },
