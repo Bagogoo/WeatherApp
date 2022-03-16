@@ -1,0 +1,89 @@
+type Location {
+  name: String
+  region: String
+  country: String
+  localtime: String
+}
+type Condition {
+ text:String
+ icon: String
+ code: Float
+}
+type Hour{
+  time: String,
+  temp_c: Float,
+  condition:Condition,
+  wind_kph: Float,
+  wind_degree: Float,
+  wind_dir: String,
+  pressure_mb: Float,
+  precip_mm: Float,
+  humidity: Float,
+  cloud: Float,
+  feelslike_c: Float,
+  windchill_c: Float,
+  heatindex_c: Float,
+  dewpoint_c: Float,
+  will_it_rain: Float,
+  chance_of_rain: String,
+  will_it_snow: Float,
+  chance_of_snow: String,
+  vis_km: Float,
+  gust_kph: Float,
+  uv: Float
+}
+type Day{
+    maxtemp_c: Float,
+    mintemp_c: Float,
+    avgtemp_c: Float,
+    maxwind_kph: Float,
+    totalprecip_mm: Float,
+    avgvis_km: Float,
+    avghumidity: Float,
+    daily_will_it_rain: Float,
+    daily_chance_of_rain: String,
+    daily_will_it_snow: Float,
+    daily_chance_of_snow: String,
+    condition: Condition
+}
+type ForecastDay{
+  date: String,
+  day: Day,
+  hour: [Hour!]!
+}
+type Current {
+  last_updated_epoch: Float
+  last_updated: String
+  temp_c: Float
+  temp_f: Float
+  is_day: Boolean
+  condition: Condition
+  wind_mph: Float
+  wind_kph: Float
+  wind_degree: Float
+  wind_dir: String
+  pressure_mb: Float
+  pressure_in: Float
+  precip_mm: Float
+  precip_in: Float
+  humidity: Float
+  cloud: Float
+  feelslike_c: Float
+  feelslike_f: Float
+  vis_km: Float
+  vis_miles: Float
+  uv: Float
+  gust_mph: Float
+  gust_kph: Float
+}
+type ForecastThreeDays{
+  forecastday: [ForecastDay]!
+}
+type Forecast {
+  location: Location
+  current: Current
+  forecast: ForecastThreeDays!
+}
+type Query {
+  getForecast(location : String!): Forecast
+}

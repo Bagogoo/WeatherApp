@@ -5,7 +5,7 @@ const server = (debug, NODE_ENV = 'development') => {
   const fuse = FuseBox.init({
     homeDir: 'src',
     target: 'server@esnext',
-    output: 'dist/node-test/$name.js',
+    output: 'dist/server/$name.js',
     useTypescriptCompiler: true,
     cache: false,
     sourceMaps: !!debug,
@@ -26,7 +26,7 @@ const server = (debug, NODE_ENV = 'development') => {
 
   const bundle = fuse
     .bundle('server')
-    .instructions('> [node-test/index.ts]');
+    .instructions('> [server/index.ts]');
 
   if (!debug && NODE_ENV === 'development') {
     bundle
@@ -51,7 +51,7 @@ task('s:c', ['client-assets'], () => {
   const fuse = FuseBox.init({
     homeDir: 'src',
     target: 'browser@es2015',
-    output: 'dist/seed/$name.js',
+    output: 'dist/client/$name.js',
     useTypescriptCompiler: true,
     cache: true,
     sourceMaps: true,
@@ -65,7 +65,7 @@ task('s:c', ['client-assets'], () => {
       ],      
       JSONPlugin(),
       WebIndexPlugin({
-        template: 'src/seed/index.html'
+        template: 'src/client/index.html'
       })
     ]
   });
@@ -77,8 +77,8 @@ task('s:c', ['client-assets'], () => {
 
   fuse
     .bundle('app')
-    .instructions('> seed/index.ts')
-    .watch('seed/**')
+    .instructions('> client/index.ts')
+    .watch('client/**')
     .hmr();
 
   return fuse.run();
