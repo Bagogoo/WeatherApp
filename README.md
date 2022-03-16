@@ -3,7 +3,7 @@
 ### Built With
 * [Vue.js](https://vuejs.org/)
 * [Node.js](https://nodejs.org/en/)
-* [PostgreSQL] (https://www.postgresql.org/)
+* [PostgreSQL](https://www.postgresql.org/)
 * [Express](http://expressjs.com/)
 * [GraphQL](https://graphql.org/)
 * [Bootstrap](https://getbootstrap.com)
