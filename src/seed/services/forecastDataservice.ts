@@ -162,7 +162,7 @@ export const forecastService = {
       day{
         avgtemp_c
         avghumidity
-        daily_will_it_rain
+        daily_chance_of_rain
         condition{
           text
           icon

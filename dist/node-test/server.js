@@ -1,7 +1,5 @@
 (function(FuseBox){FuseBox.$fuse$=FuseBox;
 FuseBox.target = "server";
-// allowSyntheticDefaultImports
-FuseBox.sdep = true;
 Object.assign(process.env, {"NODE_ENV":"development"})
 FuseBox.pkg("default", {}, function(___scope___){
 ___scope___.file("node-test/index.js", function(exports, require, module, __filename, __dirname){
@@ -90,7 +88,7 @@ exports.default = {
             };
             const [row] = await this.query('INSERT INTO users (ukey, email, password) VALUES ($1, $2, $3) RETURNING  ukey, email, password', [user.ukey, user.email, user.password]);
             await db_1.pool.query("INSERT INTO sessions (ukey, expires) values ($1,(NOW()+ interval '3 hour'))", [user.ukey]);
-            await sendMail_1.sendEmail(user.email, "http://localhost:8080/#/confirm/" + user.email);
+            await sendMail_1.sendEmail(user.email, "http://localhost:8080/#/confirm/" + user.ukey);
             const result = {
                 data: {
                     ukey: row.ukey,
@@ -99,15 +97,15 @@ exports.default = {
             };
             return result.data;
         },
-        async confirm({ email }, context) {
-            const user = await this.getUserByEmail({ email });
+        async confirm({ ukey }, context) {
+            const user = await this.getUserByKey({ ukey });
             if (user === undefined) {
                 throw new Error("Użytkownik nie istnieje");
             }
             if (user.confirm === true) {
                 throw Error("Użytkownik już potwierdzony");
             }
-            const success = await this.query("UPDATE Users SET confirm=true where email = $1", [email]);
+            const success = await this.query("UPDATE Users SET confirm=true where ukey= $1", [ukey]);
             if (!success) {
                 throw Error("Wystąpił błąd");
             }
@@ -223,7 +221,7 @@ exports.sendEmail = sendEmail;
 });
 ___scope___.file("node-test/graphql/user.gql", function(exports, require, module, __filename, __dirname){
 
-module.exports = "type RegisteredUser {\r\n  ukey: ID\r\n  confirm_token: ID\r\n}\r\ntype AccessToken {\r\n  ukey: ID\r\n  access_token: ID\r\n}\r\ntype Profile {\r\n  ukey: ID\r\n  email: String\r\n  cities: String\r\n}\r\ntype Query {\r\n  profile(ukey: String!): Profile\r\n  validate(ukey: String!): Boolean\r\n}\r\ntype Mutation {\r\n  register(\r\n    email: String!\r\n    password: String!\r\n    confirmation: String!\r\n  ): RegisteredUser\r\n  login(email: String!, password: String!): AccessToken\r\n  confirm(email: String!): Boolean\r\n  refresh: AccessToken\r\n  saveCities(cities: String!, ukey: String!): Boolean\r\n}\r\n"
+module.exports = "type RegisteredUser {\r\n  ukey: ID\r\n  confirm_token: ID\r\n}\r\ntype AccessToken {\r\n  ukey: ID\r\n  access_token: ID\r\n}\r\ntype Profile {\r\n  ukey: ID\r\n  email: String\r\n  cities: String\r\n}\r\ntype Query {\r\n  profile(ukey: String!): Profile\r\n  validate(ukey: String!): Boolean\r\n}\r\ntype Mutation {\r\n  register(\r\n    email: String!\r\n    password: String!\r\n    confirmation: String!\r\n  ): RegisteredUser\r\n  login(email: String!, password: String!): AccessToken\r\n  confirm(ukey: String!): Boolean\r\n  refresh: AccessToken\r\n  saveCities(cities: String!, ukey: String!): Boolean\r\n}\r\n"
 });
 ___scope___.file("node-test/routes/forecast.js", function(exports, require, module, __filename, __dirname){
 

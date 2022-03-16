@@ -3,20 +3,25 @@ import { users } from '../../services/userDataService';
 export default Vue.extend({
     name: 'Confirm',
     props: {
-        email: {
+        ukey: {
             type: String as () => string | undefined
         }
     },
     mounted() {
-        this.confirm(this.email);
+        this.confirm(this.ukey);
     },
     methods: {
-        async confirm(email: string | undefined) {
-            if (email === undefined) {
-                alert('Coś poszło nie tak');
+        async confirm(ukey: string | undefined) {
+            try {
+                if (ukey === undefined) {
+                    alert('Coś poszło nie tak');
+                }
+                else return await users.confirm(ukey);
+            } catch (err) {
+               alert(err);
             }
-            else return await users.confirm(email);
-            this.$router.push({ name: 'login' });
         }
+           
+        
     }
 });

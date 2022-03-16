@@ -1,6 +1,6 @@
 <template>
 <div>
-  Witaj {{email}} <a href="./#/login">Zaloguj się</a>
+  Dziękujemy za rejestrację. <a href="./#/login">Zaloguj się</a>
 </div>
 </template>
 

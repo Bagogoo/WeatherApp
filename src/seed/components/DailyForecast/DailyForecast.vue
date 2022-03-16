@@ -6,8 +6,9 @@
 <div class="daily">
 <div class="date">{{data.date}}</div>
 <div class="temp">{{data.day.avgtemp_c}}&deg;C </div> 
-<div class="date">{{data.day.avghumidity}} % <br>
-{{data.day.daily_will_it_rain}} % szansy na opady </div><br>
+<div class="date">{{data.day.avghumidity}} % wilgotności <br>
+{{data.day.daily_chance_of_rain}} % szansy na opady </div><br>
+<Hourly class='hourly' :hourlyWeather="data.hour">
 </div>
 </b-col>
 </b-row>
@@ -27,6 +28,9 @@
   .daily{
     padding: 5px;
   }
+.daily .hourly {
+  background-color: white;
+}
  .daily .date{
    color:white;
    font-size: 20px;

@@ -18,17 +18,17 @@ new Vue({
             },
             {
                 path: '/login',
-                name: 'Login',                
+                name: 'login',                
                 component: () => import('./components/Login')
             },
             {
                 path: '/register',
-                name: 'Register',                
+                name: 'register',                
                 component: () => import('./components/Register')
             },
             {
-                path: '/confirm/:email',
-                name: 'Confirm',
+                path: '/confirm/:ukey',
+                name: 'confirm',
                 props: true,
                 component: () => import('./components/Confirm')
             }

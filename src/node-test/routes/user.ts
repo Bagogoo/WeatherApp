@@ -38,7 +38,7 @@ export default {
       };
       const [row] = await this.query<User>('INSERT INTO users (ukey, email, password) VALUES ($1, $2, $3) RETURNING  ukey, email, password', [user.ukey, user.email, user.password]);
       await pool.query("INSERT INTO sessions (ukey, expires) values ($1,(NOW()+ interval '3 hour'))", [user.ukey])
-      await sendEmail(user.email, "http://localhost:8080/#/confirm/"+user.email);
+      await sendEmail(user.email, "http://localhost:8080/#/confirm/"+user.ukey);
       const result: Result<any> = {
         data: {
           ukey: row.ukey,
@@ -48,15 +48,15 @@ export default {
       return result.data;
     },
 
-    async confirm({ email }: { email: string }, context: any) {
-      const user = await this.getUserByEmail({ email });
+    async confirm({ ukey }: { ukey: string }, context: any) {
+      const user = await this.getUserByKey({ ukey });
       if (user === undefined) {
         throw new Error("Użytkownik nie istnieje");
       }
       if (user.confirm === true) {
         throw Error("Użytkownik już potwierdzony");
       }
-      const success = await this.query<User>("UPDATE Users SET confirm=true where email = $1", [email]);
+      const success = await this.query<User>("UPDATE Users SET confirm=true where ukey= $1", [ukey]);
       if (!success) {
         throw Error("Wystąpił błąd");
       }

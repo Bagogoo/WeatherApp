@@ -101,10 +101,10 @@ export const users = {
     }
     else return false;
   },
-  async confirm(email: string) {
-    if (email !== null) {
+  async confirm(ukey: string|null) {
+    if (ukey !== null) {
       const isConfirm = await base.query<Confirmation>('user', `mutation{
-        confirm(email:"${email}")
+        confirm(ukey:"${ukey}")
       }`);
       return isConfirm.confirm;
     }
